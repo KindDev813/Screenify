@@ -1,32 +1,16 @@
 import { useState, useEffect } from "react";
-import { Button, Radio, Select, Modal, FloatButton, ColorPicker } from "antd";
+import { Button, Radio, Select } from "antd";
 import {
   ChromeOutlined,
   DesktopOutlined,
   VideoCameraOutlined,
   WindowsOutlined,
-  AudioOutlined,
-  SoundOutlined,
-  EditOutlined,
-  CaretRightOutlined,
-  PauseOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  LineHeightOutlined,
-  DeleteOutlined,
-  BgColorsOutlined,
-  FormatPainterOutlined,
-  AudioMutedOutlined,
 } from "@ant-design/icons";
-import Draggable from "react-draggable";
-import Webcam from "react-webcam";
+
 import "./style.css";
-import {
-  fullScreenRecordingMod,
-  windowRecordingMode,
-  currentTabRecordingMode,
-  cameraOnlyRecordingMode,
-} from "./recordingModeExtend";
+import AnnotationTools from "./annotationTools";
+import WebcamDrag from "./webcamDrag";
+import TimeCounterModal from "./timeCounterModal";
 
 const GetMedia = () => {
   const [recordingMode, setRecordingMode] = useState("1"); // Recording mode : 1(Full Screen), 2(Window), 3(Current Tab), 4(Camera only)
@@ -45,7 +29,6 @@ const GetMedia = () => {
   const [cameraOnlyRecordingStarted, setCameraOnlyRecordingStarted] =
     useState(false);
 
-  const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
   const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable varaiable
   const [cameraSource, setCameraSource] = useState(false);
   const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable modal
@@ -53,18 +36,9 @@ const GetMedia = () => {
   const [countNumber, setCountNumber] = useState(4); // Time updater
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
-  const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [visibleEditMenu, setVisibleEditMenu] = useState(false); // edit tool menu visible
-  const [visibleAudioTrack, setVisibleAudioTrack] = useState(false); // enable/disable audio track
-  let videoStream; // Variable to store the video stream
 
   const [recordedChunks, setRecordedChunks] = useState([]);
-
-  function handleDataAvailable(event) {
-    if (event.data.size > 0) {
-      recordedChunks.push(event.data);
-    }
-  }
 
   // get camera & audio device
   useEffect(() => {
@@ -160,24 +134,24 @@ const GetMedia = () => {
   const onRecording = () => {
     switch (recordingMode) {
       case "1":
-        fullScreenRecordingMode(!fullScreenRecordingStarted);
+        screenRecordingMode(!fullScreenRecordingStarted, "monitor");
         setFullScreenRecordingStarted(!fullScreenRecordingStarted);
         setRecordingStarted(!recordingStarted);
         break;
       case "2":
-        // windowRecordingMode(!windowRecordingStarted, qualityDefaultValue);
-        // setWindowRecordingStarted(!windowRecordingStarted);
-        // setRecordingStarted(!recordingStarted);
+        screenRecordingMode(!windowRecordingStarted, "window");
+        setWindowRecordingStarted(!windowRecordingStarted);
+        setRecordingStarted(!recordingStarted);
         break;
       case "3":
-        // currentTabRecordingMode(!currentTabRecordingStarted, qualityDefaultValue);
-        // setCurrentTabRecordingStarted(!currentTabRecordingStarted);
-        // setRecordingStarted(!recordingStarted);
+        screenRecordingMode(!currentTabRecordingStarted, "browser");
+        setCurrentTabRecordingStarted(!currentTabRecordingStarted);
+        setRecordingStarted(!recordingStarted);
         break;
       default:
-        // cameraOnlyRecordingMode(!cameraOnlyRecordingStarted, qualityDefaultValue);
-        // setCameraOnlyRecordingStarted(!cameraOnlyRecordingStarted);
-        // setRecordingStarted(!recordingStarted);
+        screenRecordingMode(!cameraOnlyRecordingStarted, "webcam");
+        setCameraOnlyRecordingStarted(!cameraOnlyRecordingStarted);
+        setRecordingStarted(!recordingStarted);
         break;
     }
   };
@@ -221,17 +195,25 @@ const GetMedia = () => {
     }
   };
 
-  // Full Screen mode recording mode
-  const fullScreenRecordingMode = async (recordingStatus) => {
+  // mode recording mode
+  const screenRecordingMode = async (recordingStatus, recordingMode) => {
     if (recordingStatus) {
       try {
         const constraints = {
-          video: { displaySurface: ["window", "monitor", "brower"] },
+          video: { displaySurface: recordingMode },
         };
 
-        const res = await navigator.mediaDevices.getDisplayMedia(constraints);
+        if (recordingMode === "webcam") {
+          setStream(
+            await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: true,
+            })
+          );
+        } else {
+          setStream(await navigator.mediaDevices.getDisplayMedia(constraints));
+        }
 
-        setStream(res);
         setVisibleTimeCounterModal(true);
       } catch (error) {
         console.log("Error accessing the screen: ", error);
@@ -249,26 +231,6 @@ const GetMedia = () => {
   };
 
   const onChangeMicrophoneSource = (value) => {};
-
-  const handleDrag = (e, ui) => {
-    const { x, y } = ui;
-    // Update any state or perform actions with the x and y coordinates
-  };
-
-  // webcam drag size
-  const onChangeSizeWebCamDrag = (value) => {
-    switch (value) {
-      case 1:
-        setSizeWebcamDrag("200px");
-        break;
-      case 2:
-        setSizeWebcamDrag("300px");
-        break;
-      default:
-        setSizeWebcamDrag("400px");
-        break;
-    }
-  };
 
   return (
     <div className="grid grid-cols-7 p-7 h-screen gap-3 relative">
@@ -370,137 +332,15 @@ const GetMedia = () => {
         </div>
       </div>
 
-      {visibleWebcamDrag && (
-        <div className="rounded-full absolute">
-          <Draggable onDrag={handleDrag}>
-            <div
-              style={{
-                width: sizeWebcamDrag,
-                height: sizeWebcamDrag,
-                backgroundColor: "black",
-              }}
-              className="rounded-full absolute z-[99]"
-            >
-              <div>
-                <Webcam
-                  className="rounded-full"
-                  style={{
-                    width: sizeWebcamDrag,
-                    height: sizeWebcamDrag,
-                  }}
-                />
+      {visibleWebcamDrag && <WebcamDrag />}
 
-                <div className="z-50 flex justify-center mt-2">
-                  <Button
-                    className="bg-[#ffffff] text-[#121212] mr-2 font-bold border-2 border-[#4e54f8]"
-                    type="primary"
-                    shape="circle"
-                    onClick={() => onChangeSizeWebCamDrag(1)}
-                  >
-                    1x
-                  </Button>
-
-                  <Button
-                    className="bg-[#ffffff] text-[#121212] mr-2 font-bold border-2 border-[#4e54f8]"
-                    type="primary"
-                    shape="circle"
-                    onClick={() => onChangeSizeWebCamDrag(2)}
-                  >
-                    1.5x
-                  </Button>
-
-                  <Button
-                    className="bg-[#ffffff] text-[#121212] font-bold border-2 border-[#4e54f8]"
-                    type="primary"
-                    shape="circle"
-                    onClick={() => onChangeSizeWebCamDrag(3)}
-                  >
-                    2x
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Draggable>
-        </div>
-      )}
-
-      <div className="absolute">
-        <Modal
-          centered
-          closable={false}
-          footer={null}
-          open={visibleTimeCounterModal}
-          width={"275px"}
-          className="time_counter_modal"
-        >
-          <p className="text-[150px] flex w-full justify-center my-auto not-italic font-bold bg-transparent">
-            {countNumber}
-          </p>
-        </Modal>
-      </div>
+      <TimeCounterModal
+        visibleTimeCounterModal={visibleTimeCounterModal}
+        countNumber={countNumber}
+      />
 
       {/* {visibleEditMenu && ( */}
-      <div className="absolute">
-        {!switchDropEditMenu ? (
-          <FloatButton.Group
-            // trigger="click"
-            type="primary"
-            style={{
-              left: 20,
-              bottom: 20,
-            }}
-          >
-            <FloatButton icon={<SoundOutlined />} />
-            <FloatButton
-              icon={
-                visibleAudioTrack ? <AudioOutlined /> : <AudioMutedOutlined />
-              }
-              onClick={() => setVisibleAudioTrack(!visibleAudioTrack)}
-            />
-            {/* <AudioMutedOutlined /> */}
-            {/* <FloatButton icon={<EditOutlined />} /> */}
-            <FloatButton.Group
-              trigger="click"
-              type="primary"
-              style={{
-                left: 20,
-                bottom: 185,
-              }}
-              icon={<EditOutlined />}
-            >
-              <FloatButton icon={<DeleteOutlined />} />
-              <FloatButton icon={<LineHeightOutlined />} />
-              {/* <FloatButton icon={<BgColorsOutlined />} /> */}
-              <FloatButton
-                className="color_picker"
-                icon={<ColorPicker size="small" style={{ margin: "auto" }} />}
-              ></FloatButton>
-              <FloatButton icon={<FormatPainterOutlined />} />
-              <FloatButton icon={<EditOutlined />} />
-            </FloatButton.Group>
-            <FloatButton
-              icon={<PauseOutlined />}
-              onClick={() => setSwitchDropEditMenu(true)}
-            />
-          </FloatButton.Group>
-        ) : (
-          <FloatButton.Group
-            // trigger="click"
-            type="primary"
-            style={{
-              left: 20,
-              bottom: 20,
-            }}
-          >
-            <FloatButton icon={<CloseOutlined />} />
-            <FloatButton icon={<CheckOutlined />} />
-            <FloatButton
-              icon={<CaretRightOutlined />}
-              onClick={() => setSwitchDropEditMenu(false)}
-            />
-          </FloatButton.Group>
-        )}
-      </div>
+      <AnnotationTools></AnnotationTools>
       {/* )} */}
     </div>
   );
