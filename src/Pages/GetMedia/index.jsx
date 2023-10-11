@@ -51,9 +51,9 @@ const GetMedia = () => {
   const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [stream, setStream] = useState(null);
   const [countNumber, setCountNumber] = useState(4); // Time updater
-
+  const [mediaRecorder, setMediaRecorder] = useState(null);
   let videoStream; // Variable to store the video stream
-  let mediaRecorder; // Variable to store the media recorder
+  // let mediaRecorder; // Variable to store the media recorder
   // let recordedChunks = []; // Array to store the recorded video chunk
   const [recordedChunks, setRecordedChunks] = useState([]);
   function handleDataAvailable(event) {
@@ -69,7 +69,6 @@ const GetMedia = () => {
         const videoDevices = mediaDevices.filter(
           (device) => device.kind === "videoinput"
         );
-
         const audioDevices = mediaDevices.filter(
           (device) => device.kind === "audioinput"
         );
@@ -100,20 +99,7 @@ const GetMedia = () => {
       if (temp === 1) {
         setVisibleTimeCounterModal(false);
         setCountNumber(3);
-        // onCloseModalStartRecording();
-
-        mediaRecorder = new MediaRecorder(stream, {
-          mimeType: "video/webm; codecs=vp9",
-          videoBitsPerSecond: Number(qualityDefaultValue),
-        });
-
-        mediaRecorder.ondataavailable = (e) => {
-          console.log(e.data);
-          setRecordedChunks([...recordedChunks, e.data]);
-          // recordedChunks.push(e.data);
-        };
-
-        mediaRecorder.start();
+        onCloseModalStartRecording();
       } else {
         temp--;
         setCountNumber(temp);
@@ -207,24 +193,29 @@ const GetMedia = () => {
 
   // Close time counter modal & start recording
   const onCloseModalStartRecording = () => {
-    mediaRecorder = new MediaRecorder(stream, {
-      mimeType: "video/webm; codecs=vp9",
-      videoBitsPerSecond: Number(qualityDefaultValue),
-    });
-
-    mediaRecorder.ondataavailable = (e) => {
-      setRecordedChunks([...recordedChunks, e.data]);
-      // recordedChunks.push(e.data);
-    };
-
-    mediaRecorder.start();
+    setMediaRecorder(
+      new MediaRecorder(stream, {
+        mimeType: "video/webm; codecs=vp9",
+        videoBitsPerSecond: Number(qualityDefaultValue),
+      })
+    );
   };
+
+  useEffect(() => {
+    if (mediaRecorder && recordingStarted) {
+      mediaRecorder.ondataavailable = (e) => {
+        setRecordedChunks([...recordedChunks, e.data]);
+      };
+
+      mediaRecorder.start();
+    }
+  }, [mediaRecorder]);
 
   // Save and download recording
   const onSaveRecording = () => {
-    console;
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
+
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
@@ -233,7 +224,6 @@ const GetMedia = () => {
         a.download = "screen-recording.webm";
         a.click();
         URL.revokeObjectURL(url);
-        // recordedChunks = [];
         setRecordedChunks([]);
       };
     }
@@ -249,7 +239,7 @@ const GetMedia = () => {
         });
 
         if (cameraSource) {
-          setVisibleWebcamDrag(!recordingStarted);
+          setVisibleWebcamDrag(true);
         }
 
         setStream(res);
@@ -259,6 +249,7 @@ const GetMedia = () => {
       }
     } else {
       onSaveRecording();
+      setVisibleWebcamDrag(false);
     }
   };
 

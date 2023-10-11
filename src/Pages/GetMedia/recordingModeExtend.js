@@ -26,6 +26,7 @@ export const fullScreenRecordingMod = async (recordingStatus, qualityValue) => {
         mimeType: "video/webm; codecs=vp9",
         videoBitsPerSecond: Number(qualityValue),
       });
+
       mediaRecorder.ondataavailable = (e) => {
         console.log(e.data);
         recordedChunks.push(e.data);
