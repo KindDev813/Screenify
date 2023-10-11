@@ -21,13 +21,6 @@ const GetMedia = () => {
   // const [permissionAllowed, setPermission] = useState(true);
   // Recording start varialble
   const [recordingStarted, setRecordingStarted] = useState(false);
-  const [fullScreenRecordingStarted, setFullScreenRecordingStarted] =
-    useState(false);
-  const [windowRecordingStarted, setWindowRecordingStarted] = useState(false);
-  const [currentTabRecordingStarted, setCurrentTabRecordingStarted] =
-    useState(false);
-  const [cameraOnlyRecordingStarted, setCameraOnlyRecordingStarted] =
-    useState(false);
 
   const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable varaiable
   const [cameraSource, setCameraSource] = useState(false);
@@ -93,6 +86,7 @@ const GetMedia = () => {
     }
 
     if (visibleTimeCounterModal) {
+      setRecordingStarted(true);
       updateCountdown();
     }
   }, [visibleTimeCounterModal]);
@@ -134,24 +128,16 @@ const GetMedia = () => {
   const onRecording = () => {
     switch (recordingMode) {
       case "1":
-        screenRecordingMode(!fullScreenRecordingStarted, "monitor");
-        setFullScreenRecordingStarted(!fullScreenRecordingStarted);
-        setRecordingStarted(!recordingStarted);
+        screenRecordingMode(!recordingStarted, "monitor");
         break;
       case "2":
-        screenRecordingMode(!windowRecordingStarted, "window");
-        setWindowRecordingStarted(!windowRecordingStarted);
-        setRecordingStarted(!recordingStarted);
+        screenRecordingMode(!recordingStarted, "window");
         break;
       case "3":
-        screenRecordingMode(!currentTabRecordingStarted, "browser");
-        setCurrentTabRecordingStarted(!currentTabRecordingStarted);
-        setRecordingStarted(!recordingStarted);
+        screenRecordingMode(!recordingStarted, "browser");
         break;
       default:
-        screenRecordingMode(!cameraOnlyRecordingStarted, "webcam");
-        setCameraOnlyRecordingStarted(!cameraOnlyRecordingStarted);
-        setRecordingStarted(!recordingStarted);
+        screenRecordingMode(!recordingStarted, "webcam");
         break;
     }
   };
@@ -180,6 +166,7 @@ const GetMedia = () => {
 
   // Save and download recording
   const onSaveRecording = () => {
+    setRecordingStarted(false);
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
@@ -201,6 +188,7 @@ const GetMedia = () => {
       try {
         const constraints = {
           video: { displaySurface: recordingMode },
+          audio: true,
         };
 
         if (recordingMode === "webcam") {
