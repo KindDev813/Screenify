@@ -1,30 +1,66 @@
-import { useCallback, useState, useEffect, useRef } from "react";
-import { Button, Radio, Select } from "antd";
+import { useState, useEffect } from "react";
+import { Button, Radio, Select, Modal, FloatButton } from "antd";
 import {
   ChromeOutlined,
   DesktopOutlined,
   VideoCameraOutlined,
+  WindowsOutlined,
+  AudioOutlined,
+  SoundOutlined,
+  EditOutlined,
+  CaretRightOutlined,
+  PauseOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  LineHeightOutlined,
+  DeleteOutlined,
+  BgColorsOutlined,
+  FormatPainterOutlined,
 } from "@ant-design/icons";
 import Draggable from "react-draggable";
 import Webcam from "react-webcam";
-
-import { webcamMode, desktopMode, tabMode } from "./recordingMode";
+import "./style.css";
+import {
+  fullScreenRecordingMod,
+  windowRecordingMode,
+  currentTabRecordingMode,
+  cameraOnlyRecordingMode,
+} from "./recordingModeExtend";
 
 const GetMedia = () => {
-  const [recordingMode, setRecordingMode] = useState("1");
-  const [qualityDefaultValue, setQualityDefaultValue] = useState("low");
-  const [cameraDeviceName, setCameraDeviceName] = useState("");
-  const [audioDeviceName, setAudioDeviceName] = useState("");
+  const [recordingMode, setRecordingMode] = useState("1"); // Recording mode : 1(Full Screen), 2(Window), 3(Current Tab), 4(Camera only)
+  const [qualityDefaultValue, setQualityDefaultValue] = useState("90000"); // Recording quality (video bit per second)
+  const [cameraDeviceName, setCameraDeviceName] = useState(""); // Camera Device Name
+  const [audioDeviceName, setAudioDeviceName] = useState(""); // Audio Device Name
 
-  const [permissionAllowed, setPermission] = useState(true);
+  // const [permissionAllowed, setPermission] = useState(true);
+  // Recording start varialble
   const [recordingStarted, setRecordingStarted] = useState(false);
-  const [cameraRecordingStarted, setCameraRecordingStarted] = useState(false);
-  const [desktopRecordingStarted, setDesktopRecordingStarted] = useState(false);
-  const [tabRecordingStarted, setTabRecordingStarted] = useState(false);
+  const [fullScreenRecordingStarted, setFullScreenRecordingStarted] =
+    useState(false);
+  const [windowRecordingStarted, setWindowRecordingStarted] = useState(false);
+  const [currentTabRecordingStarted, setCurrentTabRecordingStarted] =
+    useState(false);
+  const [cameraOnlyRecordingStarted, setCameraOnlyRecordingStarted] =
+    useState(false);
 
-  const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px");
-  const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false);
+  const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
+  const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable varaiable
   const [cameraSource, setCameraSource] = useState(false);
+  const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable modal
+  const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
+  const [stream, setStream] = useState(null);
+  const [countNumber, setCountNumber] = useState(4); // Time updater
+
+  let videoStream; // Variable to store the video stream
+  let mediaRecorder; // Variable to store the media recorder
+  // let recordedChunks = []; // Array to store the recorded video chunk
+  const [recordedChunks, setRecordedChunks] = useState([]);
+  function handleDataAvailable(event) {
+    if (event.data.size > 0) {
+      recordedChunks.push(event.data);
+    }
+  }
 
   useEffect(() => {
     const getCameraDeviceName = async () => {
@@ -57,19 +93,52 @@ const GetMedia = () => {
     getCameraDeviceName();
   }, []);
 
+  // Time counter
+  useEffect(() => {
+    let temp = 4;
+    function updateCountdown() {
+      if (temp === 1) {
+        setVisibleTimeCounterModal(false);
+        setCountNumber(3);
+        // onCloseModalStartRecording();
+
+        mediaRecorder = new MediaRecorder(stream, {
+          mimeType: "video/webm; codecs=vp9",
+          videoBitsPerSecond: Number(qualityDefaultValue),
+        });
+
+        mediaRecorder.ondataavailable = (e) => {
+          console.log(e.data);
+          setRecordedChunks([...recordedChunks, e.data]);
+          // recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.start();
+      } else {
+        temp--;
+        setCountNumber(temp);
+        setTimeout(updateCountdown, 1000); // Update countdown every 1 second
+      }
+    }
+
+    if (visibleTimeCounterModal) {
+      updateCountdown();
+    }
+  }, [visibleTimeCounterModal]);
+
   // Recording quality options
   const qualityOptions = [
     {
       label: "Low",
-      value: "low",
+      value: "90000",
     },
     {
       label: "Medium",
-      value: "medium",
+      value: "3000000",
     },
     {
       label: "High",
-      value: "high",
+      value: "5000000",
     },
   ];
 
@@ -85,57 +154,119 @@ const GetMedia = () => {
     { value: audioDeviceName, label: audioDeviceName },
   ];
 
+  // Recording quality change
   const onQualityChange = ({ target: { value } }) => {
     setQualityDefaultValue(value);
   };
 
   // Start recording
   const onRecording = () => {
-    if (cameraSource) {
-      setVisibleWebcamDrag(!recordingStarted);
-    }
-
     switch (recordingMode) {
       case "1":
-        onTabRecording();
+        onFullScreenRecording();
         break;
       case "2":
-        onDesktopRecording();
+        onWindowRecording();
+        break;
+      case "3":
+        onCurrentTabRecording();
         break;
       default:
-        onCameraRecording();
+        onCameraOnlyRecording();
         break;
     }
   };
 
-  // Camera recording functionality : 3
-  const onCameraRecording = () => {
-    webcamMode(!cameraRecordingStarted);
-    setCameraRecordingStarted(!cameraRecordingStarted);
+  // Only one tab recording functionality : 1
+  const onFullScreenRecording = () => {
+    fullScreenRecordingMode(!fullScreenRecordingStarted);
+    setFullScreenRecordingStarted(!fullScreenRecordingStarted);
     setRecordingStarted(!recordingStarted);
   };
 
   // Desktop recording functionality : 2
-  const onDesktopRecording = () => {
-    desktopMode(!desktopRecordingStarted);
-    setDesktopRecordingStarted(!desktopRecordingStarted);
-    setRecordingStarted(!recordingStarted);
+  const onWindowRecording = () => {
+    // windowRecordingMode(!windowRecordingStarted, qualityDefaultValue);
+    // setWindowRecordingStarted(!windowRecordingStarted);
+    // setRecordingStarted(!recordingStarted);
   };
 
-  // Only one tab recording functionality : 1
-  const onTabRecording = () => {
-    tabMode(!tabRecordingStarted);
-    setTabRecordingStarted(!tabRecordingStarted);
-    setRecordingStarted(!recordingStarted);
+  // Current Tab recording funtionality : 3
+  const onCurrentTabRecording = () => {
+    // currentTabRecordingMode(!currentTabRecordingStarted, qualityDefaultValue);
+    // setCurrentTabRecordingStarted(!currentTabRecordingStarted);
+    // setRecordingStarted(!recordingStarted);
+  };
+
+  // Camera recording functionality : 4
+  const onCameraOnlyRecording = () => {
+    // cameraOnlyRecordingMode(!cameraOnlyRecordingStarted, qualityDefaultValue);
+    // setCameraOnlyRecordingStarted(!cameraOnlyRecordingStarted);
+    // setRecordingStarted(!recordingStarted);
+  };
+
+  // Close time counter modal & start recording
+  const onCloseModalStartRecording = () => {
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: "video/webm; codecs=vp9",
+      videoBitsPerSecond: Number(qualityDefaultValue),
+    });
+
+    mediaRecorder.ondataavailable = (e) => {
+      setRecordedChunks([...recordedChunks, e.data]);
+      // recordedChunks.push(e.data);
+    };
+
+    mediaRecorder.start();
+  };
+
+  // Save and download recording
+  const onSaveRecording = () => {
+    console;
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "screen-recording.webm";
+        a.click();
+        URL.revokeObjectURL(url);
+        // recordedChunks = [];
+        setRecordedChunks([]);
+      };
+    }
+  };
+
+  // Full Screen mode recording mode
+  const fullScreenRecordingMode = async (recordingStatus) => {
+    if (recordingStatus) {
+      try {
+        const res = await navigator.mediaDevices.getDisplayMedia({
+          video: { displaySurface: "monitor" },
+          audio: true,
+        });
+
+        if (cameraSource) {
+          setVisibleWebcamDrag(!recordingStarted);
+        }
+
+        setStream(res);
+        setVisibleTimeCounterModal(true);
+      } catch (error) {
+        console.log("Error accessing the screen: ", error);
+      }
+    } else {
+      onSaveRecording();
+    }
   };
 
   const onChangeCameraSource = (value) => {
     value === "disabled" ? setCameraSource(false) : setCameraSource(true);
   };
 
-  const onChangeMicrophoneSource = (value) => {
-    console.log("~~~~~~~~~~~~~~~~~~~~~~~2", value);
-  };
+  const onChangeMicrophoneSource = (value) => {};
 
   const handleDrag = (e, ui) => {
     const { x, y } = ui;
@@ -167,27 +298,41 @@ const GetMedia = () => {
           >
             {/* Tab, Desktop, Camera only */}
             <Radio.Button className="h-[100px]" value="1">
-              <div className="flex flex-col h-full justify-center w-full sm:w-[60px] lg:w-[80px] xl:w-[100px] 2xl:w-[110px]">
-                <ChromeOutlined
-                  style={{ fontSize: "50px" }}
-                  className="mx-auto"
-                />
-                <span className="text-[12px] whitespace-nowrap">Tab only</span>
-              </div>
-            </Radio.Button>
-
-            <Radio.Button className="h-[100px]" value="2">
-              <div className="flex flex-col justify-center h-full w-full sm:w-[60px] lg:w-[80px] xl:w-[100px] 2xl:w-[110px]">
+              <div className="flex flex-col justify-center h-full w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
                 <DesktopOutlined
                   style={{ fontSize: "50px" }}
                   className="mx-auto"
                 />
-                <span className="text-[12px] whitespace-nowrap">Desktop</span>
+                <span className="text-[12px] whitespace-nowrap">
+                  Full Screen
+                </span>
+              </div>
+            </Radio.Button>
+
+            <Radio.Button className="h-[100px]" value="2">
+              <div className="flex flex-col justify-center h-full w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
+                <WindowsOutlined
+                  style={{ fontSize: "50px" }}
+                  className="mx-auto"
+                />
+                <span className="text-[12px] whitespace-nowrap">Window</span>
               </div>
             </Radio.Button>
 
             <Radio.Button className="h-[100px]" value="3">
-              <div className="flex flex-col h-full justify-center  w-full sm:w-[60px] lg:w-[80px] xl:w-[100px] 2xl:w-[110px]">
+              <div className="flex flex-col h-full justify-center w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
+                <ChromeOutlined
+                  style={{ fontSize: "50px" }}
+                  className="mx-auto"
+                />
+                <span className="text-[12px] whitespace-nowrap">
+                  Current Tab
+                </span>
+              </div>
+            </Radio.Button>
+
+            <Radio.Button className="h-[100px]" value="4">
+              <div className="flex flex-col h-full justify-center  w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
                 <VideoCameraOutlined
                   style={{ fontSize: "50px" }}
                   className="mx-auto"
@@ -295,6 +440,74 @@ const GetMedia = () => {
           </Draggable>
         </div>
       )}
+
+      <div className="absolute">
+        <Modal
+          centered
+          closable={false}
+          footer={null}
+          open={visibleTimeCounterModal}
+          width={"275px"}
+          className="time_counter_modal"
+        >
+          <p className="text-[150px] flex w-full justify-center my-auto not-italic font-bold bg-transparent">
+            {countNumber}
+          </p>
+        </Modal>
+      </div>
+
+      <div className="absolute">
+        {!switchDropEditMenu ? (
+          <FloatButton.Group
+            // trigger="click"
+            type="primary"
+            style={{
+              left: 20,
+              bottom: 20,
+            }}
+          >
+            <FloatButton icon={<SoundOutlined />} />
+            <FloatButton icon={<AudioOutlined />} />
+            {/* <FloatButton icon={<EditOutlined />} /> */}
+
+            <FloatButton.Group
+              trigger="click"
+              type="primary"
+              style={{
+                left: 20,
+                bottom: 185,
+              }}
+              icon={<EditOutlined />}
+            >
+              <FloatButton icon={<DeleteOutlined />} />
+              <FloatButton icon={<LineHeightOutlined />} />
+              <FloatButton icon={<BgColorsOutlined />} />
+              <FloatButton icon={<FormatPainterOutlined />} />
+              <FloatButton icon={<EditOutlined />} />
+            </FloatButton.Group>
+            <FloatButton
+              icon={<PauseOutlined />}
+              onClick={() => setSwitchDropEditMenu(true)}
+            />
+          </FloatButton.Group>
+        ) : (
+          <FloatButton.Group
+            // trigger="click"
+            type="primary"
+            style={{
+              left: 20,
+              bottom: 20,
+            }}
+          >
+            <FloatButton icon={<CloseOutlined />} />
+            <FloatButton icon={<CheckOutlined />} />
+            <FloatButton
+              icon={<CaretRightOutlined />}
+              onClick={() => setSwitchDropEditMenu(false)}
+            />
+          </FloatButton.Group>
+        )}
+      </div>
     </div>
   );
 };
