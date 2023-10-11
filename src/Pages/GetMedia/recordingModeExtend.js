@@ -28,7 +28,7 @@ export const fullScreenRecordingMod = async (recordingStatus, qualityValue) => {
       });
 
       mediaRecorder.ondataavailable = (e) => {
-        console.log(e.data);
+        console.log("e.data-------------", e.data);
         recordedChunks.push(e.data);
       };
 
@@ -40,6 +40,7 @@ export const fullScreenRecordingMod = async (recordingStatus, qualityValue) => {
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
+        console.log("recordedChunks-------------", recordedChunks);
         const blob = new Blob(recordedChunks, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");

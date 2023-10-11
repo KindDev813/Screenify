@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Radio, Select, Modal, FloatButton } from "antd";
+import { Button, Radio, Select, Modal, FloatButton, ColorPicker } from "antd";
 import {
   ChromeOutlined,
   DesktopOutlined,
@@ -16,6 +16,7 @@ import {
   DeleteOutlined,
   BgColorsOutlined,
   FormatPainterOutlined,
+  AudioMutedOutlined,
 } from "@ant-design/icons";
 import Draggable from "react-draggable";
 import Webcam from "react-webcam";
@@ -48,20 +49,24 @@ const GetMedia = () => {
   const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable varaiable
   const [cameraSource, setCameraSource] = useState(false);
   const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable modal
-  const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [stream, setStream] = useState(null);
   const [countNumber, setCountNumber] = useState(4); // Time updater
   const [mediaRecorder, setMediaRecorder] = useState(null);
+
+  const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
+  const [visibleEditMenu, setVisibleEditMenu] = useState(false); // edit tool menu visible
+  const [visibleAudioTrack, setVisibleAudioTrack] = useState(false); // enable/disable audio track
   let videoStream; // Variable to store the video stream
-  // let mediaRecorder; // Variable to store the media recorder
-  // let recordedChunks = []; // Array to store the recorded video chunk
+
   const [recordedChunks, setRecordedChunks] = useState([]);
+
   function handleDataAvailable(event) {
     if (event.data.size > 0) {
       recordedChunks.push(event.data);
     }
   }
 
+  // get camera & audio device
   useEffect(() => {
     const getCameraDeviceName = async () => {
       try {
@@ -100,6 +105,12 @@ const GetMedia = () => {
         setVisibleTimeCounterModal(false);
         setCountNumber(3);
         onCloseModalStartRecording();
+
+        if (cameraSource) {
+          setVisibleWebcamDrag(true);
+        }
+
+        setVisibleEditMenu(true);
       } else {
         temp--;
         setCountNumber(temp);
@@ -149,46 +160,26 @@ const GetMedia = () => {
   const onRecording = () => {
     switch (recordingMode) {
       case "1":
-        onFullScreenRecording();
+        fullScreenRecordingMode(!fullScreenRecordingStarted);
+        setFullScreenRecordingStarted(!fullScreenRecordingStarted);
+        setRecordingStarted(!recordingStarted);
         break;
       case "2":
-        onWindowRecording();
+        // windowRecordingMode(!windowRecordingStarted, qualityDefaultValue);
+        // setWindowRecordingStarted(!windowRecordingStarted);
+        // setRecordingStarted(!recordingStarted);
         break;
       case "3":
-        onCurrentTabRecording();
+        // currentTabRecordingMode(!currentTabRecordingStarted, qualityDefaultValue);
+        // setCurrentTabRecordingStarted(!currentTabRecordingStarted);
+        // setRecordingStarted(!recordingStarted);
         break;
       default:
-        onCameraOnlyRecording();
+        // cameraOnlyRecordingMode(!cameraOnlyRecordingStarted, qualityDefaultValue);
+        // setCameraOnlyRecordingStarted(!cameraOnlyRecordingStarted);
+        // setRecordingStarted(!recordingStarted);
         break;
     }
-  };
-
-  // Only one tab recording functionality : 1
-  const onFullScreenRecording = () => {
-    fullScreenRecordingMode(!fullScreenRecordingStarted);
-    setFullScreenRecordingStarted(!fullScreenRecordingStarted);
-    setRecordingStarted(!recordingStarted);
-  };
-
-  // Desktop recording functionality : 2
-  const onWindowRecording = () => {
-    // windowRecordingMode(!windowRecordingStarted, qualityDefaultValue);
-    // setWindowRecordingStarted(!windowRecordingStarted);
-    // setRecordingStarted(!recordingStarted);
-  };
-
-  // Current Tab recording funtionality : 3
-  const onCurrentTabRecording = () => {
-    // currentTabRecordingMode(!currentTabRecordingStarted, qualityDefaultValue);
-    // setCurrentTabRecordingStarted(!currentTabRecordingStarted);
-    // setRecordingStarted(!recordingStarted);
-  };
-
-  // Camera recording functionality : 4
-  const onCameraOnlyRecording = () => {
-    // cameraOnlyRecordingMode(!cameraOnlyRecordingStarted, qualityDefaultValue);
-    // setCameraOnlyRecordingStarted(!cameraOnlyRecordingStarted);
-    // setRecordingStarted(!recordingStarted);
   };
 
   // Close time counter modal & start recording
@@ -204,7 +195,9 @@ const GetMedia = () => {
   useEffect(() => {
     if (mediaRecorder && recordingStarted) {
       mediaRecorder.ondataavailable = (e) => {
-        setRecordedChunks([...recordedChunks, e.data]);
+        let temp = recordedChunks;
+        temp.push(e.data);
+        setRecordedChunks(temp);
       };
 
       mediaRecorder.start();
@@ -215,7 +208,6 @@ const GetMedia = () => {
   const onSaveRecording = () => {
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
-
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
@@ -233,14 +225,11 @@ const GetMedia = () => {
   const fullScreenRecordingMode = async (recordingStatus) => {
     if (recordingStatus) {
       try {
-        const res = await navigator.mediaDevices.getDisplayMedia({
-          video: { displaySurface: "monitor" },
-          audio: true,
-        });
+        const constraints = {
+          video: { displaySurface: ["window", "monitor", "brower"] },
+        };
 
-        if (cameraSource) {
-          setVisibleWebcamDrag(true);
-        }
+        const res = await navigator.mediaDevices.getDisplayMedia(constraints);
 
         setStream(res);
         setVisibleTimeCounterModal(true);
@@ -250,9 +239,11 @@ const GetMedia = () => {
     } else {
       onSaveRecording();
       setVisibleWebcamDrag(false);
+      setVisibleEditMenu(false);
     }
   };
 
+  // exist camera
   const onChangeCameraSource = (value) => {
     value === "disabled" ? setCameraSource(false) : setCameraSource(true);
   };
@@ -264,6 +255,7 @@ const GetMedia = () => {
     // Update any state or perform actions with the x and y coordinates
   };
 
+  // webcam drag size
   const onChangeSizeWebCamDrag = (value) => {
     switch (value) {
       case 1:
@@ -447,6 +439,7 @@ const GetMedia = () => {
         </Modal>
       </div>
 
+      {/* {visibleEditMenu && ( */}
       <div className="absolute">
         {!switchDropEditMenu ? (
           <FloatButton.Group
@@ -458,9 +451,14 @@ const GetMedia = () => {
             }}
           >
             <FloatButton icon={<SoundOutlined />} />
-            <FloatButton icon={<AudioOutlined />} />
+            <FloatButton
+              icon={
+                visibleAudioTrack ? <AudioOutlined /> : <AudioMutedOutlined />
+              }
+              onClick={() => setVisibleAudioTrack(!visibleAudioTrack)}
+            />
+            {/* <AudioMutedOutlined /> */}
             {/* <FloatButton icon={<EditOutlined />} /> */}
-
             <FloatButton.Group
               trigger="click"
               type="primary"
@@ -472,7 +470,11 @@ const GetMedia = () => {
             >
               <FloatButton icon={<DeleteOutlined />} />
               <FloatButton icon={<LineHeightOutlined />} />
-              <FloatButton icon={<BgColorsOutlined />} />
+              {/* <FloatButton icon={<BgColorsOutlined />} /> */}
+              <FloatButton
+                className="color_picker"
+                icon={<ColorPicker size="small" style={{ margin: "auto" }} />}
+              ></FloatButton>
               <FloatButton icon={<FormatPainterOutlined />} />
               <FloatButton icon={<EditOutlined />} />
             </FloatButton.Group>
@@ -499,6 +501,7 @@ const GetMedia = () => {
           </FloatButton.Group>
         )}
       </div>
+      {/* )} */}
     </div>
   );
 };
