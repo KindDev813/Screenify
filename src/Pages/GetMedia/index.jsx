@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 
 import "./style.css";
+import { Constants } from "../../utils/constants";
 import AnnotationTools from "./annotationTools";
 import WebcamDrag from "./webcamDrag";
 import TimeCounterModal from "./timeCounterModal";
@@ -30,6 +31,8 @@ const GetMedia = () => {
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
   const [visibleEditMenu, setVisibleEditMenu] = useState(false); // edit tool menu visible
+  const [cameraAllowed, setCameraAllowed] = useState("");
+  const [microphoneAllowed, setMicrophoneAllowed] = useState("");
 
   const [recordedChunks, setRecordedChunks] = useState([]);
 
@@ -37,6 +40,10 @@ const GetMedia = () => {
   useEffect(() => {
     const getCameraDeviceName = async () => {
       try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); // allow permission
+        checkPermissionAllowed("camera");
+        checkPermissionAllowed("microphone");
+
         const mediaDevices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = mediaDevices.filter(
           (device) => device.kind === "videoinput"
@@ -57,6 +64,8 @@ const GetMedia = () => {
           setAudioDeviceName("No audio device found");
         }
       } catch (error) {
+        setCameraAllowed(Constants.CAMERA_BLOCKED);
+        setMicrophoneAllowed(Constants.MICROPHONE_BLOCKED);
         console.error("Error getting camera device name:", error);
       }
     };
@@ -118,6 +127,28 @@ const GetMedia = () => {
     { value: "disabled", label: "Disabled" },
     { value: audioDeviceName, label: audioDeviceName },
   ];
+
+  // checking permission allowed device
+  const checkPermissionAllowed = (device) => {
+    const descriptor = { name: device };
+
+    navigator.permissions
+      .query(descriptor)
+      .then((result) => {
+        if (device === "camera") {
+          setCameraAllowed(Constants.CAMERA_ALLOWED);
+        } else {
+          setMicrophoneAllowed(Constants.MICROPHONE_ALLOWED);
+        }
+      })
+      .catch((error) => {
+        if (device === "camera") {
+          setCameraAllowed(Constants.CAMERA_BLOCKED);
+        } else {
+          setMicrophoneAllowed(Constants.MICROPHONE_BLOCKED);
+        }
+      });
+  };
 
   // Recording quality change
   const onQualityChange = ({ target: { value } }) => {
@@ -285,6 +316,15 @@ const GetMedia = () => {
             options={cameraOptions}
             className="mt-2 w-full h-[40px]"
           />
+          <p
+            className={`mt-1 text-start ${
+              cameraAllowed === Constants.CAMERA_ALLOWED
+                ? "text-[#31a15c]"
+                : "text-[#fd4f4f]"
+            }`}
+          >
+            {cameraAllowed}
+          </p>
 
           <p className="mt-5 text-start font-bold">Microphone</p>
           {/* Microphone source */}
@@ -294,6 +334,15 @@ const GetMedia = () => {
             options={microphoneOptions}
             className="mt-2 w-full h-[40px]"
           />
+          <p
+            className={`mt-1 text-start ${
+              microphoneAllowed === Constants.MICROPHONE_ALLOWED
+                ? "text-[#31a15c]"
+                : "text-[#fd4f4f]"
+            }`}
+          >
+            {microphoneAllowed}
+          </p>
 
           <p className="mt-5 text-start font-bold">Recording quality</p>
           {/* Recording quality */}
