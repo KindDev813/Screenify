@@ -4,18 +4,18 @@ import GetMedia from "./Pages/GetMedia";
 import EditMedia from "./Pages/EditMedia";
 
 const Routes = [
+  // {
+  //   path: "/",
+  //   element: <Home />,
+  //   children: [
+  //     {
+  //       path: "/",
+  //       element: <Home />,
+  //     },
+  //   ],
+  // },
   {
     path: "/",
-    element: <Home />,
-    children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-    ],
-  },
-  {
-    path: "/getMedia",
     element: <GetMedia />,
   },
   {

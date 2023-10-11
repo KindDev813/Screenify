@@ -340,7 +340,7 @@ const GetMedia = () => {
       />
 
       {/* {visibleEditMenu && ( */}
-      <AnnotationTools></AnnotationTools>
+      {/* <AnnotationTools></AnnotationTools> */}
       {/* )} */}
     </div>
   );
