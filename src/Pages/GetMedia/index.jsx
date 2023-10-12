@@ -9,7 +9,7 @@ import {
 
 import "./style.css";
 import { Constants } from "../../utils/constants";
-import AnnotationTools from "./annotationTools";
+// import AnnotationTools from "./annotationTools";
 import WebcamDrag from "./webcamDrag";
 import TimeCounterModal from "./timeCounterModal";
 
