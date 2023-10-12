@@ -19,7 +19,6 @@ const GetMedia = () => {
   const [cameraDeviceName, setCameraDeviceName] = useState(""); // Camera Device Name
   const [audioDeviceName, setAudioDeviceName] = useState(""); // Audio Device Name
 
-  // const [permissionAllowed, setPermission] = useState(true);
   // Recording start varialble
   const [recordingStarted, setRecordingStarted] = useState(false);
 
@@ -30,9 +29,9 @@ const GetMedia = () => {
   const [countNumber, setCountNumber] = useState(4); // Time updater
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
-  const [visibleEditMenu, setVisibleEditMenu] = useState(false); // edit tool menu visible
-  const [cameraAllowed, setCameraAllowed] = useState("");
-  const [microphoneAllowed, setMicrophoneAllowed] = useState("");
+  const [visibleEditMenu, setVisibleEditMenu] = useState(true); // edit tool menu visible
+  const [cameraAllowed, setCameraAllowed] = useState(""); // Allow camera message
+  const [microphoneAllowed, setMicrophoneAllowed] = useState(""); // Allow microphone message
 
   const [recordedChunks, setRecordedChunks] = useState([]);
 
@@ -252,7 +251,7 @@ const GetMedia = () => {
   const onChangeMicrophoneSource = (value) => {};
 
   return (
-    <div className="grid grid-cols-7 p-7 h-screen gap-3 relative">
+    <div className="grid grid-cols-7 p-7 h-screen gap-3 relative w-full">
       <div className="col-span-7 flex flex-col my-auto">
         <div className="max-w-[600px] border-[#111231] border-2 rounded-lg p-10 mx-auto">
           {/* Mode of recording */}
@@ -376,9 +375,15 @@ const GetMedia = () => {
         countNumber={countNumber}
       />
 
-      {/* {visibleEditMenu && ( */}
-      {/* <AnnotationTools></AnnotationTools> */}
-      {/* )} */}
+      {/* {visibleEditMenu && (
+        <AnnotationTools
+          recordingStarted={recordingStarted}
+          handleChangeRecordingStarted={(state) => {
+            setRecordingStarted(state);
+            onSaveRecording();
+          }}
+        ></AnnotationTools>
+      )} */}
     </div>
   );
 };
