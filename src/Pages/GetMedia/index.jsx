@@ -103,6 +103,10 @@ const GetMedia = () => {
     } else {
       setVisibleWebcamDrag(false);
       onSaveRecording();
+
+      if (stream) {
+        stream.getVideoTracks()[0].stop();
+      }
     }
   }, [cameraSource, recordingStarted]);
 
@@ -202,9 +206,9 @@ const GetMedia = () => {
   }, [mediaRecorder]);
 
   if (stream) {
-    stream.getVideoTracks()[0].onended = function () {
+    stream.getVideoTracks()[0].addEventListener("ended", function () {
       setRecordingStarted(false);
-    };
+    });
   }
 
   // mode recording mode
