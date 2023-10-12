@@ -36,7 +36,7 @@ const WebcamDrag = () => {
             height: sizeWebcamDrag,
             backgroundColor: "black",
           }}
-          className="rounded-full absolute z-[99]"
+          className="rounded-full absolute z-[9999]"
         >
           <div>
             <Webcam
