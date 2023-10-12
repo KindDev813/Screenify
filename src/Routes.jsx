@@ -17,7 +17,7 @@ const Routes = [
   {
     path: "/",
     element: <GetMedia />,
-  }
+  },
   {
     path: "/editMedia",
     element: <EditMedia />,
