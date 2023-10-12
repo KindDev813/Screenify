@@ -76,17 +76,15 @@ const GetMedia = () => {
   useEffect(() => {
     let temp = 4;
     function updateCountdown() {
-      if (temp === 1) {
-        setVisibleTimeCounterModal(false);
+      if (temp === 0) {
         setCountNumber(3);
         onCloseModalStartRecording();
-
-        if (cameraSource) {
-          setVisibleWebcamDrag(true);
-        }
-
         setVisibleEditMenu(true);
       } else {
+        if (temp === 1) {
+          setVisibleTimeCounterModal(false);
+          setRecordingStarted(true);
+        }
         temp--;
         setCountNumber(temp);
         setTimeout(updateCountdown, 1000); // Update countdown every 1 second
@@ -94,10 +92,19 @@ const GetMedia = () => {
     }
 
     if (visibleTimeCounterModal) {
-      setRecordingStarted(true);
       updateCountdown();
     }
   }, [visibleTimeCounterModal]);
+
+  // Camera source enable/disable
+  useEffect(() => {
+    if (recordingStarted) {
+      cameraSource ? setVisibleWebcamDrag(true) : setVisibleWebcamDrag(false);
+    } else {
+      setVisibleWebcamDrag(false);
+      onSaveRecording();
+    }
+  }, [cameraSource, recordingStarted]);
 
   // Recording quality options
   const qualityOptions = [
@@ -194,23 +201,11 @@ const GetMedia = () => {
     }
   }, [mediaRecorder]);
 
-  // Save and download recording
-  const onSaveRecording = () => {
-    setRecordingStarted(false);
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "screen-recording.webm";
-        a.click();
-        URL.revokeObjectURL(url);
-        setRecordedChunks([]);
-      };
-    }
-  };
+  if (stream) {
+    stream.getVideoTracks()[0].onended = function () {
+      setRecordingStarted(false);
+    };
+  }
 
   // mode recording mode
   const screenRecordingMode = async (recordingStatus, recordingMode) => {
@@ -237,9 +232,25 @@ const GetMedia = () => {
         console.log("Error accessing the screen: ", error);
       }
     } else {
-      onSaveRecording();
-      setVisibleWebcamDrag(false);
+      setRecordingStarted(false);
       setVisibleEditMenu(false);
+    }
+  };
+
+  // Save and download recording
+  const onSaveRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "screen-recording.webm";
+        a.click();
+        URL.revokeObjectURL(url);
+        setRecordedChunks([]);
+      };
     }
   };
 
