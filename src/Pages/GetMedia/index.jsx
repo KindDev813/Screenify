@@ -16,8 +16,6 @@ import TimeCounterModal from "./timeCounterModal";
 const GetMedia = () => {
   const [recordingMode, setRecordingMode] = useState("1"); // Recording mode : 1(Full Screen), 2(Window), 3(Current Tab), 4(Camera only)
   const [qualityDefaultValue, setQualityDefaultValue] = useState("90000"); // Recording quality (video bit per second)
-  const [cameraDeviceName, setCameraDeviceName] = useState(""); // Camera Device Name
-  const [audioDeviceName, setAudioDeviceName] = useState(""); // Audio Device Name
 
   // Recording start varialble
   const [recordingStarted, setRecordingStarted] = useState(false);
@@ -32,12 +30,13 @@ const GetMedia = () => {
   const [visibleEditMenu, setVisibleEditMenu] = useState(true); // edit tool menu visible
   const [cameraAllowed, setCameraAllowed] = useState(""); // Allow camera message
   const [microphoneAllowed, setMicrophoneAllowed] = useState(""); // Allow microphone message
-
   const [recordedChunks, setRecordedChunks] = useState([]);
+  const [microphoneOptions, setMicrophoneOptions] = useState([]); // Select list of microphone content
+  const [cameraOptions, setCameraOptions] = useState([]); // Select list of camera content
 
   // get camera & audio device
   useEffect(() => {
-    const getCameraDeviceName = async () => {
+    const getDeviceName = async () => {
       try {
         await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); // allow permission
         checkPermissionAllowed("camera");
@@ -47,20 +46,33 @@ const GetMedia = () => {
         const videoDevices = mediaDevices.filter(
           (device) => device.kind === "videoinput"
         );
+
         const audioDevices = mediaDevices.filter(
           (device) => device.kind === "audioinput"
         );
 
         if (videoDevices.length > 0) {
-          setCameraDeviceName(videoDevices[0].label);
+          let temp = videoDevices.map((videoDevice) => {
+            return { label: videoDevice.label, value: videoDevice.label };
+          });
+
+          temp.unshift({ label: "Disabled", value: "disabled" });
+          setCameraOptions(temp);
         } else {
-          setCameraDeviceName("No camera device found");
+          setCameraOptions([...cameraOptions, "No camera device found"]);
         }
 
         if (audioDevices.length > 0) {
-          setAudioDeviceName(audioDevices[0].label);
+          let temp = audioDevices.map((audioDevice) => {
+            return { label: audioDevice.label, value: audioDevice.label };
+          });
+          temp.unshift({ label: "Disabled", value: "disabled" });
+          setMicrophoneOptions(temp);
         } else {
-          setAudioDeviceName("No audio device found");
+          setMicrophoneOptions([
+            ...microphoneOptions,
+            "No microphone device found",
+          ]);
         }
       } catch (error) {
         setCameraAllowed(Constants.CAMERA_BLOCKED);
@@ -69,7 +81,7 @@ const GetMedia = () => {
       }
     };
 
-    getCameraDeviceName();
+    getDeviceName();
   }, []);
 
   // Time counter
@@ -124,18 +136,6 @@ const GetMedia = () => {
       label: "High",
       value: "5000000",
     },
-  ];
-
-  // Camera settings
-  const cameraOptions = [
-    { value: "disabled", label: "Disabled" },
-    { value: cameraDeviceName, label: cameraDeviceName },
-  ];
-
-  // Microphone settings
-  const microphoneOptions = [
-    { value: "disabled", label: "Disabled" },
-    { value: audioDeviceName, label: audioDeviceName },
   ];
 
   // checking permission allowed device
@@ -258,7 +258,7 @@ const GetMedia = () => {
     }
   };
 
-  // exist camera
+  // change camera source
   const onChangeCameraSource = (value) => {
     value === "disabled" ? setCameraSource(false) : setCameraSource(true);
   };
@@ -268,7 +268,7 @@ const GetMedia = () => {
   return (
     <div className="grid grid-cols-7 p-7 h-screen gap-3 relative w-full">
       <div className="col-span-7 flex flex-col my-auto">
-        <div className="max-w-[600px] border-[#111231] border-2 rounded-lg p-10 mx-auto">
+        <div className="max-w-[600px] w-full border-[#111231] border-2 rounded-lg p-10 mx-auto">
           {/* Mode of recording */}
           <Radio.Group
             value={recordingMode}
