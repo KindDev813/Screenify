@@ -42,8 +42,6 @@ const GetMedia = () => {
         await checkPermissionAllowed("camera");
         await checkPermissionAllowed("microphone");
       } catch (error) {
-        // setCameraAllowed(false);
-        // setMicrophoneAllowed(false);
         console.error("Error getting camera device name:", error);
       }
     };
@@ -87,9 +85,8 @@ const GetMedia = () => {
 
     if (!recordingStarted) {
       onSaveRecording();
-      if (stream) {
-        stream.getVideoTracks()[0].stop();
-      }
+
+      stream?.getVideoTracks()[0].stop();
     }
   }, [cameraSource, recordingStarted, cameraAllowed]);
 
@@ -234,15 +231,16 @@ const GetMedia = () => {
     if (recordingStatus) {
       try {
         const constraints = {
-          video: { displaySurface: recordingMode },
-          audio: { deviceId: microphoneSource },
+          // video: { displaySurface: recordingMode },
+          vide: { mediaSource: "screen" },
+          audio: true,
         };
 
         if (recordingMode === "webcam") {
           setStream(
             await navigator.mediaDevices.getUserMedia({
               video: true,
-              audio: { deviceId: microphoneSource },
+              audio: true,
             })
           );
         } else {
@@ -407,7 +405,12 @@ const GetMedia = () => {
         </div>
       </div>
 
-      {visibleWebcamDrag && <WebcamDrag deviceId={cameraSource} />}
+      {visibleWebcamDrag && (
+        <WebcamDrag
+          cameraDeviceId={cameraSource}
+          microphoneDeviceId={microphoneSource}
+        />
+      )}
 
       <TimeCounterModal
         visibleTimeCounterModal={visibleTimeCounterModal}
