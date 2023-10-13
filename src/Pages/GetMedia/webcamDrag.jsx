@@ -21,7 +21,7 @@ const WebcamDrag = (props) => {
   const handleCameraSource = async () => {
     try {
       const constraints = {
-        audio: true,
+        // audio: true,
         video: {
           deviceId: deviceId,
         },

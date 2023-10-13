@@ -21,15 +21,16 @@ const GetMedia = () => {
   const [recordingStarted, setRecordingStarted] = useState(false);
 
   const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable varaiable
-  const [cameraSource, setCameraSource] = useState("disabled");
+  const [cameraSource, setCameraSource] = useState("Disabled");
+  const [microphoneSource, setMicrophoneSource] = useState("Disabled");
   const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable modal
   const [stream, setStream] = useState(null);
   const [countNumber, setCountNumber] = useState(4); // Time updater
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
   const [visibleEditMenu, setVisibleEditMenu] = useState(true); // edit tool menu visible
-  const [cameraAllowed, setCameraAllowed] = useState(""); // Allow camera message
-  const [microphoneAllowed, setMicrophoneAllowed] = useState(""); // Allow microphone message
+  const [cameraAllowed, setCameraAllowed] = useState(false); // Allow camera message
+  const [microphoneAllowed, setMicrophoneAllowed] = useState(false); // Allow microphone message
   const [recordedChunks, setRecordedChunks] = useState([]);
   const [microphoneOptions, setMicrophoneOptions] = useState([]); // Select list of microphone content
   const [cameraOptions, setCameraOptions] = useState([]); // Select list of camera content
@@ -38,45 +39,11 @@ const GetMedia = () => {
   useEffect(() => {
     const getDeviceName = async () => {
       try {
-        await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); // allow permission
-        checkPermissionAllowed("camera");
-        checkPermissionAllowed("microphone");
-
-        const mediaDevices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = mediaDevices.filter(
-          (device) => device.kind === "videoinput"
-        );
-
-        const audioDevices = mediaDevices.filter(
-          (device) => device.kind === "audioinput"
-        );
-
-        if (videoDevices.length > 0) {
-          let temp = videoDevices.map((videoDevice) => {
-            return { label: videoDevice.label, value: videoDevice.deviceId };
-          });
-
-          temp.unshift({ label: "Disabled", value: "disabled" });
-          setCameraOptions(temp);
-        } else {
-          setCameraOptions([...cameraOptions, "No camera device found"]);
-        }
-
-        if (audioDevices.length > 0) {
-          let temp = audioDevices.map((audioDevice) => {
-            return { label: audioDevice.label, value: audioDevice.deviceId };
-          });
-          temp.unshift({ label: "Disabled", value: "disabled" });
-          setMicrophoneOptions(temp);
-        } else {
-          setMicrophoneOptions([
-            ...microphoneOptions,
-            "No microphone device found",
-          ]);
-        }
+        await checkPermissionAllowed("camera");
+        await checkPermissionAllowed("microphone");
       } catch (error) {
-        setCameraAllowed(Constants.CAMERA_BLOCKED);
-        setMicrophoneAllowed(Constants.MICROPHONE_BLOCKED);
+        // setCameraAllowed(false);
+        // setMicrophoneAllowed(false);
         console.error("Error getting camera device name:", error);
       }
     };
@@ -110,8 +77,10 @@ const GetMedia = () => {
 
   // Camera source enable/disable
   useEffect(() => {
-    if (cameraSource !== "disabled") {
-      setVisibleWebcamDrag(true);
+    if (cameraAllowed) {
+      cameraSource !== "Disabled"
+        ? setVisibleWebcamDrag(true)
+        : setVisibleWebcamDrag(false);
     } else {
       setVisibleWebcamDrag(false);
     }
@@ -122,7 +91,19 @@ const GetMedia = () => {
         stream.getVideoTracks()[0].stop();
       }
     }
-  }, [cameraSource, recordingStarted]);
+  }, [cameraSource, recordingStarted, cameraAllowed]);
+
+  useEffect(() => {
+    if (mediaRecorder && recordingStarted) {
+      mediaRecorder.ondataavailable = (e) => {
+        let temp = recordedChunks;
+        temp.push(e.data);
+        setRecordedChunks(temp);
+      };
+
+      mediaRecorder.start();
+    }
+  }, [mediaRecorder]);
 
   // Recording quality options
   const qualityOptions = [
@@ -140,26 +121,73 @@ const GetMedia = () => {
     },
   ];
 
+  // get camera & microphone source
+  const onGetDeviceSouce = async () => {
+    const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = mediaDevices.filter(
+      (device) => device.kind === "videoinput"
+    );
+
+    const audioDevices = mediaDevices.filter(
+      (device) => device.kind === "audioinput"
+    );
+
+    if (videoDevices.length > 0) {
+      let temp = videoDevices.map((videoDevice) => {
+        return { label: videoDevice.label, value: videoDevice.deviceId };
+      });
+
+      temp.unshift({ label: "Disabled", value: "Disabled" });
+      setCameraOptions(temp);
+    } else {
+      setCameraOptions([...cameraOptions, "No camera device found"]);
+    }
+
+    if (audioDevices.length > 0) {
+      let temp = audioDevices.map((audioDevice) => {
+        return { label: audioDevice.label, value: audioDevice.deviceId };
+      });
+      temp.unshift({ label: "Disabled", value: "Disabled" });
+      setMicrophoneOptions(temp);
+    } else {
+      setMicrophoneOptions([
+        ...microphoneOptions,
+        "No microphone device found",
+      ]);
+    }
+  };
+
   // checking permission allowed device
-  const checkPermissionAllowed = (device) => {
+  const checkPermissionAllowed = async (device) => {
     const descriptor = { name: device };
 
-    navigator.permissions
+    await navigator.permissions
       .query(descriptor)
       .then((result) => {
-        if (device === "camera") {
-          setCameraAllowed(Constants.CAMERA_ALLOWED);
-        } else {
-          setMicrophoneAllowed(Constants.MICROPHONE_ALLOWED);
-        }
+        onVisibleDeviceSelect(device, result.state);
+
+        result.onchange = function () {
+          onVisibleDeviceSelect(device, result.state);
+        };
       })
       .catch((error) => {
-        if (device === "camera") {
-          setCameraAllowed(Constants.CAMERA_BLOCKED);
-        } else {
-          setMicrophoneAllowed(Constants.MICROPHONE_BLOCKED);
-        }
+        console.log(error);
       });
+  };
+
+  // camera & microphone souce enable/unenable
+  const onVisibleDeviceSelect = (deviceName, state) => {
+    if (state === "granted") {
+      deviceName === "camera"
+        ? setCameraAllowed(true)
+        : setMicrophoneAllowed(true);
+
+      onGetDeviceSouce();
+    } else {
+      deviceName === "camera"
+        ? setCameraAllowed(false)
+        : setMicrophoneAllowed(false);
+    }
   };
 
   // Recording quality change
@@ -195,18 +223,6 @@ const GetMedia = () => {
     );
   };
 
-  useEffect(() => {
-    if (mediaRecorder && recordingStarted) {
-      mediaRecorder.ondataavailable = (e) => {
-        let temp = recordedChunks;
-        temp.push(e.data);
-        setRecordedChunks(temp);
-      };
-
-      mediaRecorder.start();
-    }
-  }, [mediaRecorder]);
-
   if (stream) {
     stream.getVideoTracks()[0].addEventListener("ended", function () {
       setRecordingStarted(false);
@@ -219,14 +235,14 @@ const GetMedia = () => {
       try {
         const constraints = {
           video: { displaySurface: recordingMode },
-          audio: true,
+          audio: { deviceId: microphoneSource },
         };
 
         if (recordingMode === "webcam") {
           setStream(
             await navigator.mediaDevices.getUserMedia({
               video: true,
-              audio: true,
+              audio: { deviceId: microphoneSource },
             })
           );
         } else {
@@ -262,10 +278,14 @@ const GetMedia = () => {
 
   // change camera source
   const onChangeCameraSource = (value) => {
-    value === "disabled" ? setCameraSource("disabled") : setCameraSource(value);
+    value === "Disabled" ? setCameraSource("Disabled") : setCameraSource(value);
   };
 
-  const onChangeMicrophoneSource = (value) => {};
+  const onChangeMicrophoneSource = (value) => {
+    value === "Disabled"
+      ? setMicrophoneSource("Disabled")
+      : setMicrophoneSource(value);
+  };
 
   return (
     <div className="grid grid-cols-7 p-7 h-screen gap-3 relative w-full">
@@ -327,38 +347,40 @@ const GetMedia = () => {
           <p className="mt-5 text-start font-bold">Camera</p>
           {/* Camera source */}
           <Select
-            defaultValue="disabled"
+            defaultValue="Disabled"
             onChange={(e) => onChangeCameraSource(e)}
             options={cameraOptions}
             className="mt-2 w-full h-[40px]"
+            disabled={!cameraAllowed}
           />
-          <p
-            className={`mt-1 text-start ${
-              cameraAllowed === Constants.CAMERA_ALLOWED
-                ? "text-[#31a15c]"
-                : "text-[#fd4f4f]"
-            }`}
-          >
-            {cameraAllowed}
-          </p>
+          {cameraAllowed ? (
+            <p className="mt-1 text-start text-[#31a15c]">
+              {Constants.CAMERA_ALLOWED}
+            </p>
+          ) : (
+            <p className="mt-1 text-start text-[#fd4f4f]">
+              {Constants.CAMERA_BLOCKED}
+            </p>
+          )}
 
           <p className="mt-5 text-start font-bold">Microphone</p>
           {/* Microphone source */}
           <Select
-            defaultValue="disabled"
+            defaultValue="Disabled"
             onChange={(e) => onChangeMicrophoneSource(e)}
             options={microphoneOptions}
             className="mt-2 w-full h-[40px]"
+            disabled={!microphoneAllowed}
           />
-          <p
-            className={`mt-1 text-start ${
-              microphoneAllowed === Constants.MICROPHONE_ALLOWED
-                ? "text-[#31a15c]"
-                : "text-[#fd4f4f]"
-            }`}
-          >
-            {microphoneAllowed}
-          </p>
+          {microphoneAllowed ? (
+            <p className="mt-1 text-start text-[#31a15c]">
+              {Constants.MICROPHONE_ALLOWED}
+            </p>
+          ) : (
+            <p className="mt-1 text-start text-[#fd4f4f]">
+              {Constants.MICROPHONE_BLOCKED}
+            </p>
+          )}
 
           <p className="mt-5 text-start font-bold">Recording quality</p>
           {/* Recording quality */}
