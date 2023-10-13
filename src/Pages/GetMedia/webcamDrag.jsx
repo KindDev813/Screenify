@@ -1,15 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "antd";
 import Draggable from "react-draggable";
-import Webcam from "react-webcam";
 import "./style.css";
 
-const WebcamDrag = () => {
+const WebcamDrag = (props) => {
+  const { deviceId } = props;
+
+  useEffect(() => {
+    if (deviceId !== "disabled") {
+      handleCameraSource();
+    }
+  }, [deviceId]);
   const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
 
   const handleDrag = (e, ui) => {
     const { x, y } = ui;
     // Update any state or perform actions with the x and y coordinates
+  };
+
+  const handleCameraSource = async () => {
+    try {
+      const constraints = {
+        audio: true,
+        video: {
+          deviceId: deviceId,
+        },
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const videoElement = document.querySelector("video#webcam_video");
+      videoElement.srcObject = stream;
+    } catch (error) {
+      console.log("Error opening video camera.", error);
+    }
   };
 
   // webcam drag size
@@ -39,8 +62,10 @@ const WebcamDrag = () => {
           className="rounded-full absolute z-[9999]"
         >
           <div>
-            <Webcam
+            <video
               className="rounded-full"
+              id="webcam_video"
+              autoPlay
               style={{
                 width: sizeWebcamDrag,
                 height: sizeWebcamDrag,

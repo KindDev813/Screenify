@@ -21,7 +21,7 @@ const GetMedia = () => {
   const [recordingStarted, setRecordingStarted] = useState(false);
 
   const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable varaiable
-  const [cameraSource, setCameraSource] = useState(false);
+  const [cameraSource, setCameraSource] = useState("disabled");
   const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable modal
   const [stream, setStream] = useState(null);
   const [countNumber, setCountNumber] = useState(4); // Time updater
@@ -53,7 +53,7 @@ const GetMedia = () => {
 
         if (videoDevices.length > 0) {
           let temp = videoDevices.map((videoDevice) => {
-            return { label: videoDevice.label, value: videoDevice.label };
+            return { label: videoDevice.label, value: videoDevice.deviceId };
           });
 
           temp.unshift({ label: "Disabled", value: "disabled" });
@@ -64,7 +64,7 @@ const GetMedia = () => {
 
         if (audioDevices.length > 0) {
           let temp = audioDevices.map((audioDevice) => {
-            return { label: audioDevice.label, value: audioDevice.label };
+            return { label: audioDevice.label, value: audioDevice.deviceId };
           });
           temp.unshift({ label: "Disabled", value: "disabled" });
           setMicrophoneOptions(temp);
@@ -110,12 +110,14 @@ const GetMedia = () => {
 
   // Camera source enable/disable
   useEffect(() => {
-    if (recordingStarted) {
-      cameraSource ? setVisibleWebcamDrag(true) : setVisibleWebcamDrag(false);
+    if (cameraSource !== "disabled") {
+      setVisibleWebcamDrag(true);
     } else {
       setVisibleWebcamDrag(false);
-      onSaveRecording();
+    }
 
+    if (!recordingStarted) {
+      onSaveRecording();
       if (stream) {
         stream.getVideoTracks()[0].stop();
       }
@@ -246,11 +248,11 @@ const GetMedia = () => {
     if (mediaRecorder) {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const blob = new Blob(recordedChunks, { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "screen-recording.webm";
+        a.download = "screen-recording.mp4";
         a.click();
         URL.revokeObjectURL(url);
         setRecordedChunks([]);
@@ -260,7 +262,7 @@ const GetMedia = () => {
 
   // change camera source
   const onChangeCameraSource = (value) => {
-    value === "disabled" ? setCameraSource(false) : setCameraSource(true);
+    value === "disabled" ? setCameraSource("disabled") : setCameraSource(value);
   };
 
   const onChangeMicrophoneSource = (value) => {};
@@ -383,7 +385,7 @@ const GetMedia = () => {
         </div>
       </div>
 
-      {visibleWebcamDrag && <WebcamDrag />}
+      {visibleWebcamDrag && <WebcamDrag deviceId={cameraSource} />}
 
       <TimeCounterModal
         visibleTimeCounterModal={visibleTimeCounterModal}
