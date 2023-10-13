@@ -10,7 +10,7 @@ const WebcamDrag = (props) => {
     if (cameraDeviceId !== "disabled") {
       handleCameraSource();
     }
-  }, [cameraDeviceId]);
+  }, [cameraDeviceId, microphoneDeviceId]);
   const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
 
   const handleDrag = (e, ui) => {
