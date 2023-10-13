@@ -4,13 +4,13 @@ import Draggable from "react-draggable";
 import "./style.css";
 
 const WebcamDrag = (props) => {
-  const { deviceId } = props;
+  const { cameraDeviceId, microphoneDeviceId } = props;
 
   useEffect(() => {
-    if (deviceId !== "disabled") {
+    if (cameraDeviceId !== "disabled") {
       handleCameraSource();
     }
-  }, [deviceId]);
+  }, [cameraDeviceId]);
   const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
 
   const handleDrag = (e, ui) => {
@@ -21,9 +21,11 @@ const WebcamDrag = (props) => {
   const handleCameraSource = async () => {
     try {
       const constraints = {
-        // audio: true,
+        audio: {
+          deviceId: microphoneDeviceId ? microphoneDeviceId : undefined,
+        },
         video: {
-          deviceId: deviceId,
+          deviceId: cameraDeviceId ? cameraDeviceId : undefined,
         },
       };
 
