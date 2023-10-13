@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Radio, Select } from "antd";
+import { Button, Radio, Select, Modal } from "antd";
 import {
   ChromeOutlined,
   DesktopOutlined,
@@ -231,29 +231,37 @@ const GetMedia = () => {
     if (recordingStatus) {
       try {
         const constraints = {
-          // video: { displaySurface: recordingMode },
-          vide: { mediaSource: "screen" },
+          video: { displaySurface: recordingMode },
           audio: true,
         };
 
         if (recordingMode === "webcam") {
-          setStream(
-            await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: true,
-            })
-          );
+          if (cameraSource !== "Disabled") {
+            setStream(
+              await navigator.mediaDevices.getUserMedia({
+                video: {
+                  deviceId: cameraSource ? cameraSource : undefined,
+                },
+                audio: {
+                  deviceId: microphoneSource ? microphoneSource : undefined,
+                },
+              })
+            );
+
+            setVisibleTimeCounterModal(true);
+          } else {
+            error();
+          }
         } else {
           setStream(await navigator.mediaDevices.getDisplayMedia(constraints));
+          setVisibleTimeCounterModal(true);
         }
-
-        setVisibleTimeCounterModal(true);
       } catch (error) {
         console.log("Error accessing the screen: ", error);
       }
     } else {
       setRecordingStarted(false);
-      setVisibleEditMenu(false);
+      // setVisibleEditMenu(false);
     }
   };
 
@@ -283,6 +291,12 @@ const GetMedia = () => {
     value === "Disabled"
       ? setMicrophoneSource("Disabled")
       : setMicrophoneSource(value);
+  };
+
+  const error = () => {
+    Modal.error({
+      title: "Please enable your camera(microphone)!",
+    });
   };
 
   return (
