@@ -11,6 +11,7 @@ import "./style.css";
 import WebcamDrag from "../../Components/WebcamDrag";
 import TimeCounterModal from "../../Components/TimeCounterModal";
 import LabelSelect from "../../Components/LabelSelect";
+import AnnotationTool from "../../Components/AnnotationTool";
 
 // Recording mode labels & icons
 const modeLabels = [
@@ -399,15 +400,15 @@ function Record() {
         countNumber={countNumber}
       />
 
-      {/* {visibleEditMenu && (
-        <AnnotationTools
+      {visibleEditMenu && (
+        <AnnotationTool
           recordingStarted={recordingStarted}
           handleChangeRecordingStarted={(state) => {
             setRecordingStarted(state);
             onSaveRecording();
           }}
-        ></AnnotationTools>
-      )} */}
+        ></AnnotationTool>
+      )}
     </div>
   );
 }
