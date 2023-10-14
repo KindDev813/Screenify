@@ -1,41 +1,60 @@
 import { useState, useEffect } from "react";
 import { Button, Radio, Select, Modal } from "antd";
 import {
-  ChromeOutlined,
   DesktopOutlined,
-  VideoCameraOutlined,
   WindowsOutlined,
+  ChromeOutlined,
+  VideoCameraOutlined,
 } from "@ant-design/icons";
 
 import "./style.css";
-import { Constants } from "../../utils/constants";
-// import AnnotationTools from "./annotationTools";
-import WebcamDrag from "./webcamDrag";
-import TimeCounterModal from "./timeCounterModal";
+import WebcamDrag from "../../Components/WebcamDrag";
+import TimeCounterModal from "../../Components/TimeCounterModal";
+import LabelSelect from "../../Components/LabelSelect";
 
-const GetMedia = () => {
-  const [recordingMode, setRecordingMode] = useState("1"); // Recording mode : 1(Full Screen), 2(Window), 3(Current Tab), 4(Camera only)
-  const [qualityDefaultValue, setQualityDefaultValue] = useState("90000"); // Recording quality (video bit per second)
+// Recording mode labels & icons
+const modeLabels = [
+  {
+    label: "Full Screen",
+    icon: <DesktopOutlined style={{ fontSize: "50px" }} className="mx-auto" />,
+  },
+  {
+    label: "Window",
+    icon: <WindowsOutlined style={{ fontSize: "50px" }} className="mx-auto" />,
+  },
+  {
+    label: "Current Tab",
+    icon: <ChromeOutlined style={{ fontSize: "50px" }} className="mx-auto" />,
+  },
+  {
+    label: "Camera only",
+    icon: (
+      <VideoCameraOutlined style={{ fontSize: "50px" }} className="mx-auto" />
+    ),
+  },
+];
 
-  // Recording start varialble
-  const [recordingStarted, setRecordingStarted] = useState(false);
+function Record() {
+  const [recordingMode, setRecordingMode] = useState("0"); // Recording status: 0(Full Screen), 1(Window), 2(Current Tab), 3(Camera only)
+  const [qualityDefaultValue, setQualityDefaultValue] = useState("90000"); // Recording quality status
 
-  const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable varaiable
-  const [cameraSource, setCameraSource] = useState("Disabled");
-  const [microphoneSource, setMicrophoneSource] = useState("Disabled");
-  const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable modal
-  const [stream, setStream] = useState(null);
-  const [countNumber, setCountNumber] = useState(4); // Time updater
-  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [recordingStarted, setRecordingStarted] = useState(false); // Recording start
+  const [visibleWebcamDrag, setVisibleWebcamDrag] = useState(false); // Webcam Drag enable/disable
+  const [cameraSource, setCameraSource] = useState("Disabled"); // Camera source deviceId
+  const [microphoneSource, setMicrophoneSource] = useState("Disabled"); // Camera source deviceId
+  const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable
+  const [stream, setStream] = useState(null); // Media stream
+  const [countNumber, setCountNumber] = useState(4); // Time counter number
+  const [mediaRecorder, setMediaRecorder] = useState(null); // media recorder
 
-  const [visibleEditMenu, setVisibleEditMenu] = useState(true); // edit tool menu visible
-  const [cameraAllowed, setCameraAllowed] = useState(false); // Allow camera message
-  const [microphoneAllowed, setMicrophoneAllowed] = useState(false); // Allow microphone message
-  const [recordedChunks, setRecordedChunks] = useState([]);
-  const [microphoneOptions, setMicrophoneOptions] = useState([]); // Select list of microphone content
-  const [cameraOptions, setCameraOptions] = useState([]); // Select list of camera content
+  const [visibleEditMenu, setVisibleEditMenu] = useState(true); // Edit tool menu enable/disable
+  const [cameraAllowed, setCameraAllowed] = useState(false); // Camera permission status
+  const [microphoneAllowed, setMicrophoneAllowed] = useState(false); // Microphone permission status
+  const [recordedChunks, setRecordedChunks] = useState([]); // Recorded chunks
+  const [microphoneOptions, setMicrophoneOptions] = useState([]); // Microphone source list
+  const [cameraOptions, setCameraOptions] = useState([]); // Camera source list
 
-  // get camera & audio device
+  // Get camera & audio device
   useEffect(() => {
     const getDeviceName = async () => {
       try {
@@ -90,6 +109,7 @@ const GetMedia = () => {
     }
   }, [cameraSource, recordingStarted, cameraAllowed]);
 
+  // Putting chunks during the recording
   useEffect(() => {
     if (mediaRecorder && recordingStarted) {
       mediaRecorder.ondataavailable = (e) => {
@@ -118,7 +138,7 @@ const GetMedia = () => {
     },
   ];
 
-  // get camera & microphone source
+  // Get camera & microphone source
   const onGetDeviceSouce = async () => {
     const mediaDevices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = mediaDevices.filter(
@@ -154,7 +174,7 @@ const GetMedia = () => {
     }
   };
 
-  // checking permission allowed device
+  // Checking device permission
   const checkPermissionAllowed = async (device) => {
     const descriptor = { name: device };
 
@@ -172,7 +192,7 @@ const GetMedia = () => {
       });
   };
 
-  // camera & microphone souce enable/unenable
+  // Camera & Microphone souce enable/disable
   const onVisibleDeviceSelect = (deviceName, state) => {
     if (state === "granted") {
       deviceName === "camera"
@@ -187,7 +207,7 @@ const GetMedia = () => {
     }
   };
 
-  // Recording quality change
+  // Changing recording quality
   const onQualityChange = ({ target: { value } }) => {
     setQualityDefaultValue(value);
   };
@@ -210,7 +230,7 @@ const GetMedia = () => {
     }
   };
 
-  // Close time counter modal & start recording
+  // Closing time counter modal & start recording
   const onCloseModalStartRecording = () => {
     setMediaRecorder(
       new MediaRecorder(stream, {
@@ -226,7 +246,7 @@ const GetMedia = () => {
     });
   }
 
-  // mode recording mode
+  // Getting the device according to recording mode
   const screenRecordingMode = async (recordingStatus, recordingMode) => {
     if (recordingStatus) {
       try {
@@ -250,7 +270,7 @@ const GetMedia = () => {
 
             setVisibleTimeCounterModal(true);
           } else {
-            error();
+            cameraDisableErrorModal();
           }
         } else {
           setStream(await navigator.mediaDevices.getDisplayMedia(constraints));
@@ -265,7 +285,7 @@ const GetMedia = () => {
     }
   };
 
-  // Save and download recording
+  // Saving & downloading chunks into file
   const onSaveRecording = () => {
     if (mediaRecorder) {
       mediaRecorder.stop();
@@ -282,18 +302,20 @@ const GetMedia = () => {
     }
   };
 
-  // change camera source
+  // Changing camera source
   const onChangeCameraSource = (value) => {
     value === "Disabled" ? setCameraSource("Disabled") : setCameraSource(value);
   };
 
+  // Changing microphone source
   const onChangeMicrophoneSource = (value) => {
     value === "Disabled"
       ? setMicrophoneSource("Disabled")
       : setMicrophoneSource(value);
   };
 
-  const error = () => {
+  // Error modal when disable the camera source
+  const cameraDisableErrorModal = () => {
     Modal.error({
       title: "Please enable your camera(microphone)!",
     });
@@ -308,94 +330,38 @@ const GetMedia = () => {
             value={recordingMode}
             onChange={(e) => setRecordingMode(e.target.value)}
           >
-            {/* Tab, Desktop, Camera only */}
-            <Radio.Button className="h-[100px]" value="1">
-              <div className="flex flex-col justify-center h-full w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
-                <DesktopOutlined
-                  style={{ fontSize: "50px" }}
-                  className="mx-auto"
-                />
-                <span className="text-[12px] whitespace-nowrap">
-                  Full Screen
-                </span>
-              </div>
-            </Radio.Button>
-
-            <Radio.Button className="h-[100px]" value="2">
-              <div className="flex flex-col justify-center h-full w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
-                <WindowsOutlined
-                  style={{ fontSize: "50px" }}
-                  className="mx-auto"
-                />
-                <span className="text-[12px] whitespace-nowrap">Window</span>
-              </div>
-            </Radio.Button>
-
-            <Radio.Button className="h-[100px]" value="3">
-              <div className="flex flex-col h-full justify-center w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
-                <ChromeOutlined
-                  style={{ fontSize: "50px" }}
-                  className="mx-auto"
-                />
-                <span className="text-[12px] whitespace-nowrap">
-                  Current Tab
-                </span>
-              </div>
-            </Radio.Button>
-
-            <Radio.Button className="h-[100px]" value="4">
-              <div className="flex flex-col h-full justify-center  w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
-                <VideoCameraOutlined
-                  style={{ fontSize: "50px" }}
-                  className="mx-auto"
-                />
-                <span className="text-[12px] whitespace-nowrap">
-                  Camera only
-                </span>
-              </div>
-            </Radio.Button>
+            {modeLabels.map((modeLabel, index) => {
+              return (
+                <Radio.Button className="h-[100px]" value={index} key={index}>
+                  <div className="flex flex-col justify-center h-full w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
+                    {modeLabel.icon}
+                    <span className="text-[12px] whitespace-nowrap">
+                      {modeLabel.label}
+                    </span>
+                  </div>
+                </Radio.Button>
+              );
+            })}
           </Radio.Group>
 
-          <p className="mt-5 text-start font-bold">Camera</p>
-          {/* Camera source */}
-          <Select
-            defaultValue="Disabled"
-            onChange={(e) => onChangeCameraSource(e)}
+          {/* Camera source selection */}
+          <LabelSelect
+            label={"Camera"}
             options={cameraOptions}
-            className="mt-2 w-full h-[40px]"
-            disabled={!cameraAllowed}
+            allowed={cameraAllowed}
+            onChangeDeviceSource={(value) => onChangeCameraSource(value)}
           />
-          {cameraAllowed ? (
-            <p className="mt-1 text-start text-[#31a15c]">
-              {Constants.CAMERA_ALLOWED}
-            </p>
-          ) : (
-            <p className="mt-1 text-start text-[#fd4f4f]">
-              {Constants.CAMERA_BLOCKED}
-            </p>
-          )}
 
-          <p className="mt-5 text-start font-bold">Microphone</p>
-          {/* Microphone source */}
-          <Select
-            defaultValue="Disabled"
-            onChange={(e) => onChangeMicrophoneSource(e)}
+          {/* Microphone source selection */}
+          <LabelSelect
+            label={"Microphone"}
             options={microphoneOptions}
-            className="mt-2 w-full h-[40px]"
-            disabled={!microphoneAllowed}
+            allowed={microphoneAllowed}
+            onChangeDeviceSource={(value) => onChangeMicrophoneSource(value)}
           />
-          {microphoneAllowed ? (
-            <p className="mt-1 text-start text-[#31a15c]">
-              {Constants.MICROPHONE_ALLOWED}
-            </p>
-          ) : (
-            <p className="mt-1 text-start text-[#fd4f4f]">
-              {Constants.MICROPHONE_BLOCKED}
-            </p>
-          )}
 
-          <p className="mt-5 text-start font-bold">Recording quality</p>
           {/* Recording quality */}
+          <p className="mt-5 text-start font-bold">Recording quality</p>
           <Radio.Group
             qualityOptions={50}
             options={qualityOptions}
@@ -404,8 +370,8 @@ const GetMedia = () => {
             className="mt-2 flex justify-between mx-10"
           />
 
+          {/* start or stop button */}
           <div className="flex">
-            {/* start or stop button */}
             <Button
               className="bg-[#ff1616] h-[40px] mt-5 w-full"
               type="primary"
@@ -419,6 +385,7 @@ const GetMedia = () => {
         </div>
       </div>
 
+      {/* Webcam drag */}
       {visibleWebcamDrag && (
         <WebcamDrag
           cameraDeviceId={cameraSource}
@@ -426,6 +393,7 @@ const GetMedia = () => {
         />
       )}
 
+      {/* Time counter modal */}
       <TimeCounterModal
         visibleTimeCounterModal={visibleTimeCounterModal}
         countNumber={countNumber}
@@ -442,6 +410,6 @@ const GetMedia = () => {
       )} */}
     </div>
   );
-};
+}
 
-export default GetMedia;
+export default Record;
