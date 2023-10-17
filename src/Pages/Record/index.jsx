@@ -452,7 +452,7 @@ function Record() {
         countNumber={countNumber}
       />
 
-      {!visibleEditMenu && (
+      {visibleEditMenu && (
         <AnnotationTool
           recordingStarted={recordingStarted}
           handleChangeRecordingStarted={(state) => {
