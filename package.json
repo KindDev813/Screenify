@@ -16,7 +16,6 @@
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.6",
     "react-icons": "^4.11.0",
-    "react-konva": "^18.2.10",
     "react-media-recorder": "^1.6.6",
     "react-player": "^2.13.0",
     "react-redux": "^8.1.3",
