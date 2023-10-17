@@ -107,10 +107,11 @@ function Record() {
   }, [cameraSource, microphoneSource, cameraAllowed]);
 
   useEffect(() => {
-    if (!recordingStarted) {
-      onSaveRecording();
-    } else {
+    if (recordingStarted) {
       onRecordingStarted();
+    } else {
+      onSaveRecording();
+      stream?.getVideoTracks()[0].stop();
     }
   }, [recordingStarted]);
 
@@ -126,6 +127,14 @@ function Record() {
       mediaRecorder.start();
     }
   }, [mediaRecorder]);
+
+  // useEffect(() => {
+  //   if (stream) {
+  //     stream.getVideoTracks()[0].addEventListener("ended", function () {
+  //       setRecordingStarted(false);
+  //     });
+  //   }
+  // }, [stream]);
 
   // Recording quality options
   const qualityOptions = [
@@ -245,13 +254,7 @@ function Record() {
     );
   };
 
-  // if (stream) {
-  //   stream.getVideoTracks()[0].addEventListener("ended", function () {
-  //     setRecordingStarted(false);
-  //   });
-  // }
-
-  // Getting the device according to recording mode
+  // Getting the stream and merging the each stream according to recording mode
   const screenRecordingMode = async (recordingStatus, recordingMode) => {
     if (recordingStatus) {
       try {
@@ -285,23 +288,28 @@ function Record() {
               await navigator.mediaDevices
                 .getUserMedia({ audio: { deviceId: microphoneSource } })
                 .then((mic) => {
-                  let screenAudioMediaStream = new MediaStream();
-                  screenAudioMediaStream.addTrack(screen.getAudioTracks()[0]);
-
-                  let micAudioMediaStream = new MediaStream();
-                  micAudioMediaStream.addTrack(mic.getAudioTracks()[0]);
-
                   const audioContext = new AudioContext();
-                  let audioIn_01 = audioContext.createMediaStreamSource(
-                    screenAudioMediaStream
-                  );
-                  let audioIn_02 =
-                    audioContext.createMediaStreamSource(micAudioMediaStream);
-
+                  let audioIn_01, audioIn_02;
                   let dest = audioContext.createMediaStreamDestination();
 
-                  audioIn_01.connect(dest);
-                  audioIn_02.connect(dest);
+                  if (screen.getAudioTracks()[0]) {
+                    let screenAudioMediaStream = new MediaStream();
+                    screenAudioMediaStream.addTrack(screen.getAudioTracks()[0]);
+
+                    audioIn_01 = audioContext.createMediaStreamSource(
+                      screenAudioMediaStream
+                    );
+                    audioIn_01.connect(dest);
+                  }
+
+                  if (mic.getAudioTracks()[0]) {
+                    let micAudioMediaStream = new MediaStream();
+                    micAudioMediaStream.addTrack(mic?.getAudioTracks()[0]);
+
+                    audioIn_02 =
+                      audioContext.createMediaStreamSource(micAudioMediaStream);
+                    audioIn_02.connect(dest);
+                  }
 
                   let mergedMediaStream = new MediaStream();
                   mergedMediaStream.addTrack(screen.getVideoTracks()[0]);
@@ -326,7 +334,6 @@ function Record() {
 
   // Saving & downloading chunks into file
   const onSaveRecording = () => {
-    //     stream?.getTracks().forEach((t) => t.stop()); // Closing stop sharing prompt
     setVisibleEditMenu(false); // Closing edit tools menu
 
     if (mediaRecorder) {
@@ -339,6 +346,13 @@ function Record() {
         a.download = "screen-recording.mp4";
         a.click();
         URL.revokeObjectURL(url);
+
+        // if (stream) {
+        //   stream.getTracks().forEach(function (track) {
+        //     track.stop();
+        //   });
+        // }
+
         setRecordedChunks([]);
       };
     }
