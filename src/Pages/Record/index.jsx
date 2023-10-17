@@ -61,6 +61,7 @@ function Record() {
   // Get camera & audio device
   useEffect(() => {
     const getDeviceName = async () => {
+      await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       try {
         await checkPermissionAllowed("camera");
         await checkPermissionAllowed("microphone");
@@ -262,7 +263,7 @@ function Record() {
       try {
         if (recordingMode === "webcam") {
           if (cameraSource === "Disabled") {
-            cameraDisableErrorModal();
+            alertModal("Please enable your camera(microphone)!");
           } else {
             setStream(
               await navigator.mediaDevices.getUserMedia({
@@ -280,53 +281,54 @@ function Record() {
             setVisibleTimeCounterModal(true);
           }
         } else {
-          await navigator.mediaDevices
-            .getDisplayMedia({
-              video: { displaySurface: recordingMode },
-              audio: true,
-            })
-            .then(async (screen) => {
-              setScreenStream(screen);
-              // Get Microphone Stream
-              await navigator.mediaDevices
-                .getUserMedia({ audio: { deviceId: microphoneSource } })
-                .then((mic) => {
-                  setMicrophoneStream(mic);
-                  const audioContext = new AudioContext();
-                  let audioIn_01, audioIn_02;
-                  let dest = audioContext.createMediaStreamDestination();
+          const audioContext = new AudioContext();
+          let audioIn_01, audioIn_02;
+          let dest = audioContext.createMediaStreamDestination();
 
-                  if (screen.getAudioTracks()[0]) {
-                    let screenAudioMediaStream = new MediaStream();
-                    screenAudioMediaStream.addTrack(screen.getAudioTracks()[0]);
+          let screen = await navigator.mediaDevices.getDisplayMedia({
+            video: { displaySurface: recordingMode },
+            audio: true,
+          });
 
-                    audioIn_01 = audioContext.createMediaStreamSource(
-                      screenAudioMediaStream
-                    );
-                    audioIn_01.connect(dest);
-                  }
+          setScreenStream(screen);
 
-                  if (mic.getAudioTracks()[0]) {
-                    let micAudioMediaStream = new MediaStream();
-                    micAudioMediaStream.addTrack(mic?.getAudioTracks()[0]);
+          if (screen.getAudioTracks()[0]) {
+            let screenAudioMediaStream = new MediaStream();
+            screenAudioMediaStream.addTrack(screen.getAudioTracks()[0]);
 
-                    audioIn_02 =
-                      audioContext.createMediaStreamSource(micAudioMediaStream);
-                    audioIn_02.connect(dest);
-                  }
+            audioIn_01 = audioContext.createMediaStreamSource(
+              screenAudioMediaStream
+            );
+            audioIn_01.connect(dest);
+          }
 
-                  let mergedMediaStream = new MediaStream();
-                  mergedMediaStream.addTrack(screen.getVideoTracks()[0]);
-                  mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
+          if (microphoneSource !== "Disabled") {
+            let mic = await navigator.mediaDevices.getUserMedia({
+              audio: { deviceId: microphoneSource },
+            });
+            setMicrophoneStream(mic);
 
-                  setStream(mergedMediaStream);
-                  setVisibleTimeCounterModal(true);
-                })
-                .catch((err) =>
-                  console.error("Error with microphone stream: ", err)
-                );
-            })
-            .catch((err) => console.error("Error with screen stream: ", err));
+            if (mic.getAudioTracks()[0]) {
+              let micAudioMediaStream = new MediaStream();
+              micAudioMediaStream.addTrack(mic?.getAudioTracks()[0]);
+
+              audioIn_02 =
+                audioContext.createMediaStreamSource(micAudioMediaStream);
+              audioIn_02.connect(dest);
+            }
+          }
+
+          let mergedMediaStream = new MediaStream();
+          mergedMediaStream.addTrack(screen.getVideoTracks()[0]);
+          mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
+
+          setStream(mergedMediaStream);
+
+          if (recordingMode === "browser") {
+            alertModal("Hello World");
+          } else {
+            setVisibleTimeCounterModal(true);
+          }
         }
       } catch (error) {
         console.log("Error accessing the screen: ", error);
@@ -386,9 +388,9 @@ function Record() {
   };
 
   // Error modal when disable the camera source
-  const cameraDisableErrorModal = () => {
+  const alertModal = (value) => {
     Modal.error({
-      title: "Please enable your camera(microphone)!",
+      title: value,
     });
   };
 
