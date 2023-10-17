@@ -323,12 +323,7 @@ function Record() {
           mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
 
           setStream(mergedMediaStream);
-
-          if (recordingMode === "browser") {
-            alertModal("Hello World");
-          } else {
-            setVisibleTimeCounterModal(true);
-          }
+          setVisibleTimeCounterModal(true);
         }
       } catch (error) {
         console.log("Error accessing the screen: ", error);
