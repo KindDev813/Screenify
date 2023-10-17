@@ -45,8 +45,6 @@ function Record() {
   const [microphoneSource, setMicrophoneSource] = useState("Disabled"); // Camera source deviceId
   const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable
   const [stream, setStream] = useState(null); // Media stream
-  const [microphoneStream, setMicrophoneStream] = useState(null); // Microphone stream
-  const [screenStream, setScreenStream] = useState(null); // Screen Stream
   const [countNumber, setCountNumber] = useState(4); // Time counter number
   const [mediaRecorder, setMediaRecorder] = useState(null); // media recorder
 
@@ -277,60 +275,46 @@ function Record() {
             setVisibleTimeCounterModal(true);
           }
         } else {
-          // let tempScreenStream = await navigator.mediaDevices.getDisplayMedia({
-          //   video: { displaySurface: recordingMode },
-          //   audio: true,
-          // });
-
-          // setScreenStream(tempScreenStream);
-
-          // let tempMicrophoneStream = await navigator.mediaDevices.getUserMedia({
-          //   video: false,
-          //   audio:
-          //     microphoneSource !== "Disabled"
-          //       ? { deviceId: microphoneSource }
-          //       : true,
-          // });
-
-          // setMicrophoneStream(tempMicrophoneStream);
-
-          // microphoneSource === "Disabled"
-          //   ? setStream(tempScreenStream)
-          //   : setStream(
-          //       new MediaStream([
-          //         ...tempScreenStream.getTracks(),
-          //         ...tempMicrophoneStream.getAudioTracks(),
-          //       ])
-          //     );
-
-          let micStream, mixedStream, screenStream1;
-
           await navigator.mediaDevices
-            .getDisplayMedia({ video: true, audio: true })
+            .getDisplayMedia({
+              video: { displaySurface: recordingMode },
+              audio: true,
+            })
             .then(async (screen) => {
-              screenStream1 = screen;
-
               // Get Microphone Stream
               await navigator.mediaDevices
                 .getUserMedia({ audio: { deviceId: microphoneSource } })
                 .then((mic) => {
-                  micStream = mic;
+                  let screenAudioMediaStream = new MediaStream();
+                  screenAudioMediaStream.addTrack(screen.getAudioTracks()[0]);
 
-                  // Merging Both Streams
-                  setStream(
-                    new MediaStream([
-                      ...screenStream1.getTracks(),
-                      ...micStream.getAudioTracks(),
-                    ])
+                  let micAudioMediaStream = new MediaStream();
+                  micAudioMediaStream.addTrack(mic.getAudioTracks()[0]);
+
+                  const audioContext = new AudioContext();
+                  let audioIn_01 = audioContext.createMediaStreamSource(
+                    screenAudioMediaStream
                   );
+                  let audioIn_02 =
+                    audioContext.createMediaStreamSource(micAudioMediaStream);
+
+                  let dest = audioContext.createMediaStreamDestination();
+
+                  audioIn_01.connect(dest);
+                  audioIn_02.connect(dest);
+
+                  let mergedMediaStream = new MediaStream();
+                  mergedMediaStream.addTrack(screen.getVideoTracks()[0]);
+                  mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
+
+                  setStream(mergedMediaStream);
+                  setVisibleTimeCounterModal(true);
                 })
                 .catch((err) =>
-                  console.error("Error with microphone stream: " + err)
+                  console.error("Error with microphone stream: ", err)
                 );
             })
-            .catch((err) => console.error("Error with screen stream: " + err));
-
-          setVisibleTimeCounterModal(true);
+            .catch((err) => console.error("Error with screen stream: ", err));
         }
       } catch (error) {
         console.log("Error accessing the screen: ", error);
