@@ -6,14 +6,12 @@ import "./style.css";
 const xCounters = [1, 1.5, 2];
 
 const WebcamDrag = (props) => {
-  const { cameraDeviceId, microphoneDeviceId } = props;
+  const { cameraDeviceId } = props;
+  const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
 
   useEffect(() => {
-    if (cameraDeviceId !== "disabled") {
-      handleCameraSource();
-    }
-  }, [cameraDeviceId, microphoneDeviceId]);
-  const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
+    handleCameraSource();
+  }, [cameraDeviceId]);
 
   const handleDrag = (e, ui) => {
     const { x, y } = ui;
@@ -23,9 +21,7 @@ const WebcamDrag = (props) => {
   const handleCameraSource = async () => {
     try {
       const constraints = {
-        audio: {
-          deviceId: microphoneDeviceId ? microphoneDeviceId : undefined,
-        },
+        audio: false,
         video: {
           deviceId: cameraDeviceId ? cameraDeviceId : undefined,
         },

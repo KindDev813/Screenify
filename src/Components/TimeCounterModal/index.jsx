@@ -1,4 +1,5 @@
 import { Modal } from "antd";
+import "./style.css";
 
 const TimeCounterModal = (props) => {
   const { visibleTimeCounterModal, countNumber } = props;

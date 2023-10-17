@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Button, Radio, Select, Modal } from "antd";
+import { Button, Radio, Modal } from "antd";
 import {
-  DesktopOutlined,
-  WindowsOutlined,
   ChromeOutlined,
+  DesktopOutlined,
   VideoCameraOutlined,
+  WindowsOutlined,
 } from "@ant-design/icons";
 
 import "./style.css";
@@ -36,7 +36,7 @@ const modeLabels = [
 ];
 
 function Record() {
-  const [recordingMode, setRecordingMode] = useState("0"); // Recording status: 0(Full Screen), 1(Window), 2(Current Tab), 3(Camera only)
+  const [recordingMode, setRecordingMode] = useState(0); // Recording status: 0(Full Screen), 1(Window), 2(Current Tab), 3(Camera only)
   const [qualityDefaultValue, setQualityDefaultValue] = useState("90000"); // Recording quality status
 
   const [recordingStarted, setRecordingStarted] = useState(false); // Recording start
@@ -45,10 +45,12 @@ function Record() {
   const [microphoneSource, setMicrophoneSource] = useState("Disabled"); // Camera source deviceId
   const [visibleTimeCounterModal, setVisibleTimeCounterModal] = useState(false); // Time Counter Modal enable/disable
   const [stream, setStream] = useState(null); // Media stream
+  const [microphoneStream, setMicrophoneStream] = useState(null); // Microphone stream
+  const [screenStream, setScreenStream] = useState(null); // Screen Stream
   const [countNumber, setCountNumber] = useState(4); // Time counter number
   const [mediaRecorder, setMediaRecorder] = useState(null); // media recorder
 
-  const [visibleEditMenu, setVisibleEditMenu] = useState(true); // Edit tool menu enable/disable
+  const [visibleEditMenu, setVisibleEditMenu] = useState(false); // Edit tool menu enable/disable
   const [cameraAllowed, setCameraAllowed] = useState(false); // Camera permission status
   const [microphoneAllowed, setMicrophoneAllowed] = useState(false); // Microphone permission status
   const [recordedChunks, setRecordedChunks] = useState([]); // Recorded chunks
@@ -96,19 +98,23 @@ function Record() {
   // Camera source enable/disable
   useEffect(() => {
     if (cameraAllowed) {
-      cameraSource !== "Disabled"
-        ? setVisibleWebcamDrag(true)
-        : setVisibleWebcamDrag(false);
+      if (cameraSource === "Disabled") {
+        setVisibleWebcamDrag(false);
+      } else {
+        setVisibleWebcamDrag(true);
+      }
     } else {
       setVisibleWebcamDrag(false);
     }
+  }, [cameraSource, microphoneSource, cameraAllowed]);
 
+  useEffect(() => {
     if (!recordingStarted) {
       onSaveRecording();
-
-      stream?.getVideoTracks()[0].stop();
+    } else {
+      onRecordingStarted();
     }
-  }, [cameraSource, recordingStarted, cameraAllowed]);
+  }, [recordingStarted]);
 
   // Putting chunks during the recording
   useEffect(() => {
@@ -139,7 +145,7 @@ function Record() {
     },
   ];
 
-  // Get camera & microphone source
+  // Getting camera & microphone source
   const onGetDeviceSouce = async () => {
     const mediaDevices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = mediaDevices.filter(
@@ -214,19 +220,19 @@ function Record() {
   };
 
   // Start recording
-  const onRecording = () => {
+  const onRecordingStarted = () => {
     switch (recordingMode) {
-      case "1":
-        screenRecordingMode(!recordingStarted, "monitor");
+      case 0:
+        screenRecordingMode(recordingStarted, "monitor");
         break;
-      case "2":
-        screenRecordingMode(!recordingStarted, "window");
+      case 1:
+        screenRecordingMode(recordingStarted, "window");
         break;
-      case "3":
-        screenRecordingMode(!recordingStarted, "browser");
+      case 2:
+        screenRecordingMode(recordingStarted, "browser");
         break;
       default:
-        screenRecordingMode(!recordingStarted, "webcam");
+        screenRecordingMode(recordingStarted, "webcam");
         break;
     }
   };
@@ -241,40 +247,89 @@ function Record() {
     );
   };
 
-  if (stream) {
-    stream.getVideoTracks()[0].addEventListener("ended", function () {
-      setRecordingStarted(false);
-    });
-  }
+  // if (stream) {
+  //   stream.getVideoTracks()[0].addEventListener("ended", function () {
+  //     setRecordingStarted(false);
+  //   });
+  // }
 
   // Getting the device according to recording mode
   const screenRecordingMode = async (recordingStatus, recordingMode) => {
     if (recordingStatus) {
       try {
-        const constraints = {
-          video: { displaySurface: recordingMode },
-          audio: true,
-        };
-
         if (recordingMode === "webcam") {
-          if (cameraSource !== "Disabled") {
+          if (cameraSource === "Disabled") {
+            cameraDisableErrorModal();
+          } else {
             setStream(
               await navigator.mediaDevices.getUserMedia({
                 video: {
                   deviceId: cameraSource ? cameraSource : undefined,
                 },
-                audio: {
-                  deviceId: microphoneSource ? microphoneSource : undefined,
-                },
+                audio: microphoneSource
+                  ? {
+                      deviceId: microphoneSource,
+                    }
+                  : false,
               })
             );
 
             setVisibleTimeCounterModal(true);
-          } else {
-            cameraDisableErrorModal();
           }
         } else {
-          setStream(await navigator.mediaDevices.getDisplayMedia(constraints));
+          // let tempScreenStream = await navigator.mediaDevices.getDisplayMedia({
+          //   video: { displaySurface: recordingMode },
+          //   audio: true,
+          // });
+
+          // setScreenStream(tempScreenStream);
+
+          // let tempMicrophoneStream = await navigator.mediaDevices.getUserMedia({
+          //   video: false,
+          //   audio:
+          //     microphoneSource !== "Disabled"
+          //       ? { deviceId: microphoneSource }
+          //       : true,
+          // });
+
+          // setMicrophoneStream(tempMicrophoneStream);
+
+          // microphoneSource === "Disabled"
+          //   ? setStream(tempScreenStream)
+          //   : setStream(
+          //       new MediaStream([
+          //         ...tempScreenStream.getTracks(),
+          //         ...tempMicrophoneStream.getAudioTracks(),
+          //       ])
+          //     );
+
+          let micStream, mixedStream, screenStream1;
+
+          await navigator.mediaDevices
+            .getDisplayMedia({ video: true, audio: true })
+            .then(async (screen) => {
+              screenStream1 = screen;
+
+              // Get Microphone Stream
+              await navigator.mediaDevices
+                .getUserMedia({ audio: { deviceId: microphoneSource } })
+                .then((mic) => {
+                  micStream = mic;
+
+                  // Merging Both Streams
+                  setStream(
+                    new MediaStream([
+                      ...screenStream1.getTracks(),
+                      ...micStream.getAudioTracks(),
+                    ])
+                  );
+                })
+                .catch((err) =>
+                  console.error("Error with microphone stream: " + err)
+                );
+            })
+            .catch((err) => console.error("Error with screen stream: " + err));
+
           setVisibleTimeCounterModal(true);
         }
       } catch (error) {
@@ -282,12 +337,14 @@ function Record() {
       }
     } else {
       setRecordingStarted(false);
-      // setVisibleEditMenu(false);
     }
   };
 
   // Saving & downloading chunks into file
   const onSaveRecording = () => {
+    //     stream?.getTracks().forEach((t) => t.stop()); // Closing stop sharing prompt
+    setVisibleEditMenu(false); // Closing edit tools menu
+
     if (mediaRecorder) {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
@@ -376,7 +433,7 @@ function Record() {
             <Button
               className="bg-[#ff1616] h-[40px] mt-5 w-full"
               type="primary"
-              onClick={() => onRecording()}
+              onClick={() => setRecordingStarted(!recordingStarted)}
             >
               <span className="text-[15px] whitespace-nowrap font-bold">
                 {!recordingStarted ? "Start Recording" : "Stop & Save"}
@@ -387,12 +444,7 @@ function Record() {
       </div>
 
       {/* Webcam drag */}
-      {visibleWebcamDrag && (
-        <WebcamDrag
-          cameraDeviceId={cameraSource}
-          microphoneDeviceId={microphoneSource}
-        />
-      )}
+      {visibleWebcamDrag && <WebcamDrag cameraDeviceId={cameraSource} />}
 
       {/* Time counter modal */}
       <TimeCounterModal
@@ -400,7 +452,7 @@ function Record() {
         countNumber={countNumber}
       />
 
-      {visibleEditMenu && (
+      {!visibleEditMenu && (
         <AnnotationTool
           recordingStarted={recordingStarted}
           handleChangeRecordingStarted={(state) => {
