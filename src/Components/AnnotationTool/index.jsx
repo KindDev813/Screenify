@@ -19,8 +19,8 @@ import {
   MdOutlinePalette,
 } from "react-icons/md";
 
-import TextEditor from "../TextEditor";
-import FreeHand from "../FreeHand";
+// import TextEditor from "../TextEditor";
+// import FreeHand from "../FreeHand";
 
 import "./style.css";
 
