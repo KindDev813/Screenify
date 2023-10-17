@@ -3,15 +3,15 @@ import { Button } from "antd";
 import Draggable from "react-draggable";
 import "./style.css";
 
+const xCounters = [1, 1.5, 2];
+
 const WebcamDrag = (props) => {
-  const { cameraDeviceId, microphoneDeviceId } = props;
+  const { cameraDeviceId } = props;
+  const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
 
   useEffect(() => {
-    if (cameraDeviceId !== "disabled") {
-      handleCameraSource();
-    }
-  }, [cameraDeviceId, microphoneDeviceId]);
-  const [sizeWebcamDrag, setSizeWebcamDrag] = useState("200px"); // Webcam Drag default size : 200 px
+    handleCameraSource();
+  }, [cameraDeviceId]);
 
   const handleDrag = (e, ui) => {
     const { x, y } = ui;
@@ -21,9 +21,7 @@ const WebcamDrag = (props) => {
   const handleCameraSource = async () => {
     try {
       const constraints = {
-        audio: {
-          deviceId: microphoneDeviceId ? microphoneDeviceId : undefined,
-        },
+        audio: false,
         video: {
           deviceId: cameraDeviceId ? cameraDeviceId : undefined,
         },
@@ -40,10 +38,10 @@ const WebcamDrag = (props) => {
   // webcam drag size
   const onChangeSizeWebCamDrag = (value) => {
     switch (value) {
-      case 1:
+      case xCounters[0]:
         setSizeWebcamDrag("200px");
         break;
-      case 2:
+      case xCounters[1]:
         setSizeWebcamDrag("300px");
         break;
       default:
@@ -75,32 +73,19 @@ const WebcamDrag = (props) => {
             />
 
             <div className="z-50 flex justify-center mt-2">
-              <Button
-                className="bg-[#ffffff] text-[#121212] mr-2 font-bold border-2 border-[#4e54f8]"
-                type="primary"
-                shape="circle"
-                onClick={() => onChangeSizeWebCamDrag(1)}
-              >
-                1x
-              </Button>
-
-              <Button
-                className="bg-[#ffffff] text-[#121212] mr-2 font-bold border-2 border-[#4e54f8]"
-                type="primary"
-                shape="circle"
-                onClick={() => onChangeSizeWebCamDrag(2)}
-              >
-                1.5x
-              </Button>
-
-              <Button
-                className="bg-[#ffffff] text-[#121212] font-bold border-2 border-[#4e54f8]"
-                type="primary"
-                shape="circle"
-                onClick={() => onChangeSizeWebCamDrag(3)}
-              >
-                2x
-              </Button>
+              {xCounters.map((xCounter) => {
+                return (
+                  <Button
+                    className="bg-[#ffffff] text-[#121212] mr-2 font-bold border-2 border-[#4e54f8]"
+                    type="primary"
+                    shape="circle"
+                    key={xCounter}
+                    onClick={() => onChangeSizeWebCamDrag(xCounter)}
+                  >
+                    {xCounter}x
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </div>

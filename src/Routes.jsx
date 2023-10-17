@@ -1,6 +1,6 @@
 import Error404 from "./Pages/Error/404";
 import Home from "./Pages/Home";
-import GetMedia from "./Pages/GetMedia";
+import Record from "./Pages/Record";
 import EditMedia from "./Pages/EditMedia";
 
 const Routes = [
@@ -16,7 +16,7 @@ const Routes = [
   // },
   {
     path: "/",
-    element: <GetMedia />,
+    element: <Record />,
   },
   {
     path: "/editMedia",
