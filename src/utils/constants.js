@@ -38,7 +38,7 @@ export const SHAPE_TYPES = {
 export const DEFAULTS_SHAPE_VALUE = {
   RECT: {
     STROKE: "#000000",
-    FILL: "#ffffff",
+    FILL: "#0000",
     WIDTH: 150,
     HEIGHT: 100,
     ROTATION: 0,
@@ -46,7 +46,7 @@ export const DEFAULTS_SHAPE_VALUE = {
   },
   CIRCLE: {
     STROKE: "#000000",
-    FILL: "#ffffff",
+    FILL: "#0000",
     RADIUS: 50,
     STROKEWIDTH: 2,
   },
