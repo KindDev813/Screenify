@@ -3,7 +3,7 @@ import { Slider, InputNumber, Button, Select } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import ReactPlayer from "react-player";
 
-const EditMedia = () => {
+function EditMedia() {
   const TrimVideo = () => {
     // Trim video
     const [inputValue, setInputValue] = useState(0);
@@ -13,6 +13,7 @@ const EditMedia = () => {
       }
       setInputValue(value);
     };
+
     return (
       <div className="mt-2 flex flex-col">
         <div className="flex flex-row justify-between">
@@ -152,6 +153,6 @@ const EditMedia = () => {
       </div>
     </div>
   );
-};
+}
 
 export default EditMedia;

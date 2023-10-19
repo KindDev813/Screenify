@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Stage, Layer, Line } from "react-konva";
 
 const FreeHand = (props) => {
+  const { lineColor, lineSize } = props;
   const [tool, setTool] = useState("pen");
   const [lines, setLines] = useState([]);
   const isDrawing = useRef(false);
@@ -9,7 +10,10 @@ const FreeHand = (props) => {
   const handleMouseDown = (e) => {
     isDrawing.current = true;
     const pos = e.target.getStage().getPointerPosition();
-    setLines([...lines, { tool, points: [pos.x, pos.y] }]);
+    setLines([
+      ...lines,
+      { tool, points: [pos.x, pos.y], color: lineColor, size: lineSize },
+    ]);
   };
 
   const handleMouseMove = (e) => {
@@ -45,8 +49,9 @@ const FreeHand = (props) => {
           <Line
             key={i}
             points={line.points}
-            stroke="#000000"
-            strokeWidth={15}
+            stroke={line.color}
+            // fill={line.color}
+            strokeWidth={line.size}
             tension={0.5}
             lineCap="round"
             lineJoin="round"

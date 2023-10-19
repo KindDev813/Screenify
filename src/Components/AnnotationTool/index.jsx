@@ -1,59 +1,51 @@
 import { useState } from "react";
 import { FloatButton, ColorPicker, Popover, Slider } from "antd";
-import {
-  AudioOutlined,
-  SoundOutlined,
-  EditOutlined,
-  CaretRightOutlined,
-  PauseOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  LineHeightOutlined,
-  DeleteOutlined,
-  AudioMutedOutlined,
-  HighlightOutlined,
-  RadiusSettingOutlined,
-} from "@ant-design/icons";
-import { SlVolume2, SlVolumeOff } from "react-icons/sl";
 import { IoShapesOutline } from "react-icons/io5";
-import { TfiPencil } from "react-icons/tfi";
-import { BiRectangle } from "react-icons/bi";
-import { FaRegCircle } from "react-icons/fa6";
-import { BsTriangle } from "react-icons/bs";
-import { MdTimeline } from "react-icons/md";
+import {
+  MdOutlineVolumeUp,
+  MdOutlineVolumeOff,
+  MdMicNone,
+  MdMicOff,
+  MdOutlinePause,
+  MdOutlinePlayArrow,
+  MdCheck,
+  MdClose,
+  MdOutlineModeEditOutline,
+  MdTitle,
+  MdDeleteOutline,
+  MdOutlinePalette,
+} from "react-icons/md";
 
-import FreeHand from "./freeHand";
+import TextEditor from "../TextEditor";
+import FreeHand from "../FreeHand";
+import ShapePanel from "./ShapePanel";
+import ShapeCanvasField from "../ShapeCanvasField";
 
-const AnnotationTools = (props) => {
+import "./style.css";
+
+const AnnotationTool = (props) => {
   const { recordingStarted, handleChangeRecordingStarted } = props;
   const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [visibleVolumeTrack, setVisibleVolumeTrack] = useState(true); // enable/disable audio track
   const [visibleMicrophoneTrack, setVisibleMicrophoneTrack] = useState(true); // enable/disable microphone track
+  const [currentSelectedOption, setCurrentSelectedOption] = useState("0"); // Now, this is the option you selected. 0: Delete, 1: ColorPicker, 2: TextEditor, 3: Shape, 4: FreeHand
+  const [nowColor, setNowColor] = useState("#ff0000"); // Setted color by Color Picker
+  const [nowSize, setNowSize] = useState(20); // Setted size by pencil scroll
 
   const freeHandContent = (
     <div>
       <Slider
         vertical
-        defaultValue={30}
+        defaultValue={nowSize}
         style={{ display: "inline-block", height: 100 }}
+        onChange={(value) => setNowSize(value)}
       />
-    </div>
-  );
-
-  const shapeContent = (
-    <div className="flex flex-col w-auto p-2">
-      <div className="hover:text-[#0000ffb2]">
-        <BiRectangle size={70} className="mb-2" />
-      </div>
-      <FaRegCircle size={70} className="mb-2" />
-      <BsTriangle size={70} className="mb-2" />
-      <MdTimeline size={70} />
     </div>
   );
 
   return (
     <>
-      <div className="absolute !z-[34] !w-full !h-full">
+      <div className="absolute !z-[34]">
         <div className="relative">
           <div className="absolute !z-[50] hover:!z-50">
             {!switchDropEditMenu ? (
@@ -67,20 +59,18 @@ const AnnotationTools = (props) => {
               >
                 <FloatButton
                   icon={
-                    visibleMicrophoneTrack ? <SlVolume2 /> : <SlVolumeOff />
+                    visibleMicrophoneTrack ? (
+                      <MdOutlineVolumeUp />
+                    ) : (
+                      <MdOutlineVolumeOff />
+                    )
                   }
                   onClick={() =>
                     setVisibleMicrophoneTrack(!visibleMicrophoneTrack)
                   }
                 />
                 <FloatButton
-                  icon={
-                    visibleVolumeTrack ? (
-                      <AudioOutlined />
-                    ) : (
-                      <AudioMutedOutlined />
-                    )
-                  }
+                  icon={visibleVolumeTrack ? <MdMicNone /> : <MdMicOff />}
                   onClick={() => setVisibleVolumeTrack(!visibleVolumeTrack)}
                 />
 
@@ -91,46 +81,54 @@ const AnnotationTools = (props) => {
                     left: 20,
                     bottom: 185,
                   }}
-                  icon={<EditOutlined />}
+                  icon={<MdOutlinePalette />}
                 >
-                  <FloatButton icon={<DeleteOutlined />} />
+                  <FloatButton
+                    icon={<MdDeleteOutline />}
+                    onClick={() => setCurrentSelectedOption("0")}
+                  />
                   <FloatButton
                     className="color_picker"
                     icon={
-                      <ColorPicker size="small" style={{ margin: "auto" }} />
+                      <ColorPicker
+                        size="small"
+                        style={{ margin: "auto" }}
+                        value={nowColor}
+                        onChange={(value, hex) => setNowColor(hex)}
+                      />
                     }
+                    onClick={() => setCurrentSelectedOption("1")}
                   ></FloatButton>
-                  <FloatButton icon={<LineHeightOutlined />} />
+                  <FloatButton
+                    icon={<MdTitle />}
+                    onClick={() => setCurrentSelectedOption("2")}
+                  />
                   <Popover
                     placement="rightTop"
                     trigger={"hover"}
-                    content={shapeContent}
+                    content={
+                      <ShapePanel color={nowColor} strokeWidth={nowSize / 4} />
+                    }
                   >
-                    <FloatButton icon={<IoShapesOutline />} />
+                    <FloatButton
+                      icon={<IoShapesOutline />}
+                      onClick={() => setCurrentSelectedOption("3")}
+                    />
                   </Popover>
                   <Popover
                     placement="rightTop"
                     trigger={"hover"}
                     content={freeHandContent}
                   >
-                    <FloatButton icon={<TfiPencil />} />
+                    <FloatButton
+                      icon={<MdOutlineModeEditOutline />}
+                      onClick={() => setCurrentSelectedOption("4")}
+                    />
                   </Popover>
-
-                  {/* <FloatButton.Group
-              trigger="hover"
-              type="primary"
-              // style={{
-              //   left: 20,
-              //   bottom: 185,
-              // }}
-              icon={<EditOutlined />}
-            >
-              <FloatButton icon={<LineHeightOutlined />} />
-            </FloatButton.Group> */}
                 </FloatButton.Group>
 
                 <FloatButton
-                  icon={<PauseOutlined />}
+                  icon={<MdOutlinePause />}
                   onClick={() => {
                     setSwitchDropEditMenu(true);
                   }}
@@ -147,19 +145,19 @@ const AnnotationTools = (props) => {
                 }}
               >
                 <FloatButton
-                  icon={<CloseOutlined />}
+                  icon={<MdClose />}
                   onClick={() => {
                     handleChangeRecordingStarted(false);
                   }}
                 />
                 <FloatButton
-                  icon={<CheckOutlined />}
+                  icon={<MdCheck />}
                   onClick={() => {
                     handleChangeRecordingStarted(false);
                   }}
                 />
                 <FloatButton
-                  icon={<CaretRightOutlined />}
+                  icon={<MdOutlinePlayArrow />}
                   onClick={() => {
                     setSwitchDropEditMenu(false);
                   }}
@@ -167,11 +165,14 @@ const AnnotationTools = (props) => {
               </FloatButton.Group>
             )}
           </div>
-          <FreeHand />
+
+          {/* <TextEditor fontColor={nowColor} fontSize={nowSize} /> */}
+          {/* <FreeHand lineColor={nowColor} lineSize={nowSize} /> */}
+          <ShapeCanvasField />
         </div>
       </div>
     </>
   );
 };
 
-export default AnnotationTools;
+export default AnnotationTool;
