@@ -31,7 +31,6 @@ export const saveDiagram = () => {
 
 export const reset = () => {
   localStorage.removeItem(APP_NAMESPACE);
-
   useShapes.set(baseState);
 };
 

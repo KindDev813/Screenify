@@ -11,12 +11,18 @@ export const LABEL = {
   CAMERA: "Camera",
   MICROPHONE: "Microphone",
   RECORDING_QUALITY: "Recording quality",
+  TRIM: "Trim",
+  CROP: "Crop",
+  FINETUNE: "Finetune",
+  FILTER: "Filter",
+  ANNOTATE: "Annotate",
+  STICKER: "Sticker",
 };
 
 export const QUALITYOPTIONS = [
   {
     label: "Low",
-    value: "90000",
+    value: "100000",
   },
   {
     label: "Medium",
@@ -62,5 +68,13 @@ export const LIMITS_SHAPE_VALUE = {
     MIN: 5,
   },
 };
+
+export const KEY_CODE = {
+  RETURN_KEY: 13,
+  ESCAPE_KEY: 27,
+};
+
+export const BLOB_LINKS = "get_blob_link";
+export const RECORDING_DURATION = "recording_duration";
 
 export const DRAG_DATA_KEY = "__drag_data_payload__";

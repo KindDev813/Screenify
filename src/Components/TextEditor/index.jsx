@@ -2,12 +2,12 @@ import { useState } from "react";
 import TheText from "./Text";
 
 const TextEditor = (props) => {
-  const { handleSetText } = props;
+  const { texts, handleSetText } = props;
   const [selectedId, selectShape] = useState(null);
 
   return (
     <>
-      {props.texts.map((txt, i) => {
+      {texts.map((txt, i) => {
         return (
           <TheText
             key={i}
@@ -17,10 +17,12 @@ const TextEditor = (props) => {
               selectShape(txt.id);
             }}
             onChange={(newAttrs) => {
-              const txts = props.texts.slice();
+              const txts = texts.slice();
               txts[i] = newAttrs;
               handleSetText(txts);
             }}
+            x={txt.x}
+            y={txt.y}
           />
         );
       })}

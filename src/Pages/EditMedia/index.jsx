@@ -1,154 +1,163 @@
-import { useState } from "react";
-import { Slider, InputNumber, Button, Select } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
+import { useState, useEffect, useRef } from "react";
+import { Button, Radio, Space, Slider, InputNumber, Select } from "antd";
 import ReactPlayer from "react-player";
+// import TimeRange from "react-timeline-range-slider";
+
+import { MdCrop, MdOutlinePalette } from "react-icons/md";
+import { TbMovieOff, TbSticker, TbColorFilter } from "react-icons/tb";
+import { GiSettingsKnobs } from "react-icons/gi";
+
+import { LABEL, BLOB_LINKS, RECORDING_DURATION } from "../../utils/constants";
+
+const editToolLabels = [
+  {
+    label: LABEL.TRIM,
+    icon: <TbMovieOff style={{ fontSize: "30px" }} className="mx-auto" />,
+  },
+  {
+    label: LABEL.CROP,
+    icon: <MdCrop style={{ fontSize: "30px" }} className="mx-auto" />,
+  },
+  {
+    label: LABEL.FINETUNE,
+    icon: <GiSettingsKnobs style={{ fontSize: "30px" }} className="mx-auto" />,
+  },
+  {
+    label: LABEL.FILTER,
+    icon: <TbColorFilter style={{ fontSize: "30px" }} className="mx-auto" />,
+  },
+  {
+    label: LABEL.ANNOTATE,
+    icon: <MdOutlinePalette style={{ fontSize: "30px" }} className="mx-auto" />,
+  },
+  {
+    label: LABEL.STICKER,
+    icon: <TbSticker style={{ fontSize: "30px" }} className="mx-auto" />,
+  },
+];
 
 function EditMedia() {
-  const TrimVideo = () => {
-    // Trim video
-    const [inputValue, setInputValue] = useState(0);
-    const onChange = (value) => {
-      if (isNaN(value)) {
-        return;
-      }
-      setInputValue(value);
-    };
+  const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
+  const [limitMaxTrimValue, setlimitMaxTrimValue] = useState();
+  const [maxTrimValue, setMaxTrimValue] = useState("");
+  const [localVideoLink, setLocalVideoLink] = useState("");
+  const [outFormat, setOutFormat] = useState("webm");
+  const blobVideoRef = useRef();
 
-    return (
-      <div className="mt-2 flex flex-col">
-        <div className="flex flex-row justify-between">
-          <InputNumber
-            min={0}
-            max={1}
-            step={0.01}
-            value={inputValue}
-            onChange={onChange}
-          />
-        </div>
-        <Slider
-          min={0}
-          max={1}
-          onChange={onChange}
-          value={typeof inputValue === "number" ? inputValue : 0}
-          step={0.01}
-          controlSize={15}
-          dotActiveBorderColor="#0000ff"
-          colorPrimary="#0000ff"
-        />
-      </div>
-    );
-  };
+  useEffect(() => {
+    let links = JSON.parse(localStorage.getItem(BLOB_LINKS));
+    links ? setLocalVideoLink(links) : setLocalVideoLink();
+  }, []);
 
-  const CripVideo = () => {
-    // Crip video
-    const [firstValue, setFirstValue] = useState(0);
-    const [endValue, setEndValue] = useState(0);
+  useEffect(() => {
+    if (localVideoLink) {
+      setMaxTrimValue(
+        Math.floor(localStorage.getItem(RECORDING_DURATION) / 1000)
+      );
+      setlimitMaxTrimValue(
+        Math.floor(localStorage.getItem(RECORDING_DURATION) / 1000)
+      );
+    } else {
+      setMaxTrimValue(0);
+      setlimitMaxTrimValue(0);
+    }
+  }, [localVideoLink]);
 
-    const onChange = (value) => {
-      setFirstValue(value[0]);
-      setEndValue(value[1]);
-    };
-
-    const onAfterChange = (value) => {
-      if (isNaN(value)) {
-        return;
-      }
-      setFirstValue(value[0]);
-      setEndValue(value[1]);
-    };
-
-    return (
-      <div className="mt-2 flex flex-col">
-        <div className="flex flex-row justify-between">
-          <div>
-            <InputNumber
-              min={0}
-              max={1}
-              step={0.01}
-              value={firstValue}
-              onChange={(e) => setFirstValue(e)}
-              className="mr-2"
-            />
-
-            <InputNumber
-              min={0}
-              max={1}
-              step={0.01}
-              value={endValue}
-              onChange={(e) => setEndValue(e)}
-              className="mr-2"
-            />
-
-            <InputNumber
-              min={0}
-              max={1}
-              step={0.01}
-              value={endValue}
-              onChange={(e) => setEndValue(e)}
-            />
-          </div>
-        </div>
-
-        <Slider
-          range
-          defaultValue={[0.3, 0.6]}
-          min={0}
-          max={1}
-          onChange={onChange}
-          onAfterChange={onAfterChange}
-          step={0.01}
-        />
-      </div>
-    );
+  const onSaveAndDownload = async () => {
+    const a = document.createElement("a");
+    a.href = localVideoLink;
+    a.download = "screen-recording.mp4";
+    a.click();
   };
 
   return (
-    <div className="grid grid-rows-5 gap-3 py-8 h-screen">
-      <div className="row-span-2 sm:row-span-3 m-auto shadow-2xl h-auto w-full px-3 sm:px-5 md:px-0 md:w-3/5 min-w-[300px] max-w-[800px]">
-        {/* Play video */}
-        <ReactPlayer
-          url={
-            "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-          }
-          playing={true}
-          controls={true}
-          loop={true}
-          muted={true}
-          playsinline={true}
-          width={"auto"}
-          height={"100%"}
-        />
+    <div className="grid grid-cols-7 gap-4  w-full h-screen p-4 max-w-[70%] mx-auto">
+      <div className="flex col-span-1 justify-center h-full items-center border-2 border-[#00000057] rounded-lg">
+        <Radio.Group
+        // onChange={onChange}
+        // value={value}
+        >
+          <Space direction="vertical">
+            {editToolLabels.map((editTool, index) => {
+              return (
+                <Radio.Button
+                  className="h-auto !p-0 "
+                  value={index}
+                  key={index}
+                >
+                  <div className="flex flex-col py-1 sm:py-2 md:py-3 justify-center h-full min-w-[50px] w-full sm:w-[50px] lg:w-[70px] xl:w-[90px] 2xl:w-[95px]">
+                    {editTool.icon}
+                    <span className="text-[12px] whitespace-nowrap">
+                      {editTool.label}
+                    </span>
+                  </div>
+                </Radio.Button>
+              );
+            })}
+          </Space>
+        </Radio.Group>
       </div>
 
-      <div className="sm:row-span-2 row-span-3 min-w-[280px] w-1/2 m-auto grid gap-2">
-        {/* Panel to control the video */}
-        <p className="text-start font-bold">Trim Video</p>
-        {/* Panel to trim the video */}
-        <TrimVideo />
-
-        <p className="mt-3 text-start font-bold">Remove part of the video</p>
-        {/* Panel to crip the video */}
-        <CripVideo />
-
-        <div className="flex justify-between ">
-          {/* Panel to select the format and save(download) the video */}
-          <Select
-            defaultValue="mp4"
-            options={[
-              { value: "mp4", label: "Mp4" },
-              { value: "webm", label: "Webm" },
-            ]}
-            className="h-[40px] sm:mt-3 mt-10 w-[88px]"
-          />
+      <div className="col-span-6 flex flex-col justify-evenly h-full my-auto p-4 border-2 border-[#00000057] rounded-lg">
+        <div className="flex justify-end">
           <Button
-            className="bg-[#1641ff] h-[40px] sm:mt-3 mt-10 w-[200px]  "
             type="primary"
+            shape="round"
+            style={{ backgroundColor: "red" }}
+            onClick={() => {
+              onSaveAndDownload();
+            }}
           >
-            <span className="text-[15px] whitespace-nowrap font-bold">
-              <DownloadOutlined className="mr-2" />
-              Save & Download
-            </span>
+            Done!
           </Button>
+        </div>
+        <div className="mx-auto p-4">
+          <video
+            ref={blobVideoRef}
+            id="blob_video"
+            controls
+            autoPlay
+            src={localVideoLink}
+          ></video>
+        </div>
+        <div className="flex flex-col justify-center">
+          <div className="flex justify-between">
+            <div>
+              <InputNumber
+                min={0}
+                max={maxTrimValue}
+                value={limitMinTrimValue}
+                onChange={(value) => setlimitMinTrimValue(value)}
+                className="mr-[10px]"
+              />
+              <InputNumber
+                min={0}
+                max={maxTrimValue}
+                value={limitMaxTrimValue}
+                onChange={(value) => setlimitMaxTrimValue(value)}
+              />
+            </div>
+            <Select
+              defaultValue={outFormat}
+              style={{ width: 100 }}
+              onChange={(value) => setOutFormat(value)}
+              options={[
+                { value: "webm", label: "WEBM" },
+                { value: "mp4", label: "MP4" },
+              ]}
+            />
+          </div>
+          <Slider
+            range
+            min={1}
+            max={maxTrimValue}
+            value={[limitMinTrimValue, limitMaxTrimValue]}
+            defaultValue={[limitMinTrimValue, limitMaxTrimValue]}
+            onChange={(value) => {
+              setlimitMinTrimValue(value[0]);
+              setlimitMaxTrimValue(value[1]);
+            }}
+          />
         </div>
       </div>
     </div>

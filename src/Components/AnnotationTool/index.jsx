@@ -22,11 +22,11 @@ import AnnotationPlayField from "./AnnotationPlayField";
 import "./style.css";
 
 const AnnotationTool = (props) => {
-  const { recordingStarted, handleChangeRecordingStarted } = props;
+  const { recordingStarted, handleSaveRecording } = props;
   const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [visibleVolumeTrack, setVisibleVolumeTrack] = useState(true); // enable/disable audio track
   const [visibleMicrophoneTrack, setVisibleMicrophoneTrack] = useState(true); // enable/disable microphone track
-  const [currentSelectedOption, setCurrentSelectedOption] = useState(0); // Now, this is the option you selected. 0: Delete, 1: ColorPicker, 2: TextEditor, 3: Shape, 4: FreeHand
+  const [currentSelectedOption, setCurrentSelectedOption] = useState(9); // Now, this is the option you selected. 0: Delete, 1: ColorPicker, 2: TextEditor, 3: Shape, 4: FreeHand
   const [nowColor, setNowColor] = useState("#ff0000"); // Setted color by Color Picker
   const [nowSize, setNowSize] = useState(40); // Setted size by pencil scroll
   const [annotationToolsOpen, setAnnotationToolsOpen] = useState(false);
@@ -54,14 +54,13 @@ const AnnotationTool = (props) => {
           <div className="absolute !z-[50] hover:!z-50">
             {!switchDropEditMenu ? (
               <FloatButton.Group
-                // trigger="click"
-                type="default"
+                type="primary"
                 style={{
                   left: 20,
                   bottom: 20,
                 }}
               >
-                <FloatButton
+                {/* <FloatButton
                   icon={
                     visibleMicrophoneTrack ? (
                       <MdOutlineVolumeUp />
@@ -76,7 +75,7 @@ const AnnotationTool = (props) => {
                 <FloatButton
                   icon={visibleVolumeTrack ? <MdMicNone /> : <MdMicOff />}
                   onClick={() => setVisibleVolumeTrack(!visibleVolumeTrack)}
-                />
+                /> */}
 
                 <FloatButton.Group
                   open={annotationToolsOpen}
@@ -84,7 +83,8 @@ const AnnotationTool = (props) => {
                   type="primary"
                   style={{
                     left: 20,
-                    bottom: 185,
+                    bottom: 20,
+                    marginBottom: 55,
                   }}
                   icon={<MdOutlinePalette />}
                   onClick={() => setAnnotationToolsOpen(!annotationToolsOpen)}
@@ -156,13 +156,13 @@ const AnnotationTool = (props) => {
                 <FloatButton
                   icon={<MdClose />}
                   onClick={() => {
-                    handleChangeRecordingStarted(false);
+                    handleSaveRecording();
                   }}
                 />
                 <FloatButton
                   icon={<MdCheck />}
                   onClick={() => {
-                    handleChangeRecordingStarted(false);
+                    handleSaveRecording();
                   }}
                 />
                 <FloatButton
@@ -175,13 +175,11 @@ const AnnotationTool = (props) => {
             )}
           </div>
 
-          {currentSelectedOption !== 0 && (
-            <AnnotationPlayField
-              nowColor={nowColor}
-              nowSize={nowSize}
-              currentSelectedOption={currentSelectedOption}
-            />
-          )}
+          <AnnotationPlayField
+            nowColor={nowColor}
+            nowSize={nowSize}
+            currentSelectedOption={currentSelectedOption}
+          />
         </div>
       </div>
     </>

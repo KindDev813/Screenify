@@ -1,8 +1,12 @@
-import React, { useRef, useCallback, useState } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import { Layer, Stage } from "react-konva";
 
 import { DRAG_DATA_KEY, SHAPE_TYPES } from "../../utils/constants";
-import { createCircle, createRectangle } from "../ShapeCanvasField/state";
+import {
+  createCircle,
+  createRectangle,
+  reset,
+} from "../ShapeCanvasField/state";
 import FreeHand from "../FreeHand";
 import ShapeCanvasField from "../ShapeCanvasField";
 import TextEditor from "../TextEditor";
@@ -17,21 +21,15 @@ const AnnotationPlayField = (props) => {
   const isDrawing = useRef(false);
   const stageRef = useRef();
 
-  const [texts, setTexts] = useState([
-    {
-      text: "Here is editable text editor.",
-      x: 100,
-      y: 100,
-      fontSize: nowSize,
-      draggable: true,
-      width: 500,
-      ellipsis: true,
-      fontFamily: "changa",
-      fill: nowColor,
-      align: "center",
-      id: "1",
-    },
-  ]);
+  useEffect(() => {
+    if (currentSelectedOption === 0) {
+      reset();
+      setLines([]);
+      setTexts([]);
+    }
+  }, [currentSelectedOption]);
+
+  const [texts, setTexts] = useState([]);
 
   const handleDrop = useCallback(
     (event) => {
@@ -85,7 +83,7 @@ const AnnotationPlayField = (props) => {
     const pos = e.target.getStage().getPointerPosition();
     setLines([
       ...lines,
-      { tool, points: [pos.x, pos.y], color: nowColor, size: nowSize },
+      { tool, points: [pos.x, pos.y], color: nowColor, size: nowSize / 4 },
     ]);
   };
 
@@ -108,44 +106,44 @@ const AnnotationPlayField = (props) => {
     setLines(lines.concat());
   };
 
-  const handleMouseUp = useCallback(
-    (e) => {
-      if (currentSelectedOption === 4) {
-        isDrawing.current = false;
-      } else if (currentSelectedOption === 2) {
-        const pos = e.target.getStage().getPointerPosition();
-
-        setTexts([
-          ...texts,
-          {
-            text: "Here is editable text editor.",
-            x: pos.x,
-            y: pos.y,
-            fontSize: nowSize,
-            draggable: true,
-            width: 400,
-            ellipsis: true,
-            fontFamily: "changa",
-            fill: nowColor,
-            align: "center",
-            id: (texts.length + 1).toString(),
-          },
-        ]);
-      }
-    },
-    [currentSelectedOption]
-  );
+  const handleMouseUp = (e) => {
+    if (currentSelectedOption === 4) {
+      isDrawing.current = false;
+    } else if (currentSelectedOption === 2) {
+      // const pos = e.target.getStage().getPointerPosition();
+      setTexts([
+        ...texts,
+        {
+          text: "Here is editable text editor.",
+          x: e.pageX,
+          y: e.pageY,
+          fontSize: nowSize,
+          draggable: true,
+          width: 400,
+          ellipsis: true,
+          fontFamily: "changa",
+          fill: nowColor,
+          align: "center",
+          id: (texts.length + 1).toString(),
+        },
+      ]);
+    }
+  };
 
   return (
     <>
-      <div onDrop={handleDrop} onDragOver={handleDragOver}>
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onClick={handleMouseUp}
+      >
         <Stage
           width={window.innerWidth}
           height={window.innerHeight}
           ref={stageRef}
           onMouseDown={handleMouseDown}
           onMousemove={handleMouseMove}
-          onMouseup={handleMouseUp}
+          // onMouseup={handleMouseUp}
         >
           <Layer>
             <TextEditor
