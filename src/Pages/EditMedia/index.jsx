@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button, Radio, Space } from "antd";
+import { useState, useEffect, useRef } from "react";
+import { Button, Radio, Space, Slider, InputNumber, Select } from "antd";
 import ReactPlayer from "react-player";
 // import TimeRange from "react-timeline-range-slider";
 
@@ -7,7 +7,7 @@ import { MdCrop, MdOutlinePalette } from "react-icons/md";
 import { TbMovieOff, TbSticker, TbColorFilter } from "react-icons/tb";
 import { GiSettingsKnobs } from "react-icons/gi";
 
-import { LABEL } from "../../utils/constants";
+import { LABEL, BLOB_LINKS, RECORDING_DURATION } from "../../utils/constants";
 
 const editToolLabels = [
   {
@@ -37,6 +37,39 @@ const editToolLabels = [
 ];
 
 function EditMedia() {
+  const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
+  const [limitMaxTrimValue, setlimitMaxTrimValue] = useState();
+  const [maxTrimValue, setMaxTrimValue] = useState("");
+  const [localVideoLink, setLocalVideoLink] = useState("");
+  const [outFormat, setOutFormat] = useState("webm");
+  const blobVideoRef = useRef();
+
+  useEffect(() => {
+    let links = JSON.parse(localStorage.getItem(BLOB_LINKS));
+    links ? setLocalVideoLink(links) : setLocalVideoLink();
+  }, []);
+
+  useEffect(() => {
+    if (localVideoLink) {
+      setMaxTrimValue(
+        Math.floor(localStorage.getItem(RECORDING_DURATION) / 1000)
+      );
+      setlimitMaxTrimValue(
+        Math.floor(localStorage.getItem(RECORDING_DURATION) / 1000)
+      );
+    } else {
+      setMaxTrimValue(0);
+      setlimitMaxTrimValue(0);
+    }
+  }, [localVideoLink]);
+
+  const onSaveAndDownload = async () => {
+    const a = document.createElement("a");
+    a.href = localVideoLink;
+    a.download = "screen-recording.mp4";
+    a.click();
+  };
+
   return (
     <div className="grid grid-cols-7 gap-4  w-full h-screen p-4 max-w-[70%] mx-auto">
       <div className="flex col-span-1 justify-center h-full items-center border-2 border-[#00000057] rounded-lg">
@@ -71,27 +104,60 @@ function EditMedia() {
             type="primary"
             shape="round"
             style={{ backgroundColor: "red" }}
+            onClick={() => {
+              onSaveAndDownload();
+            }}
           >
             Done!
           </Button>
         </div>
         <div className="mx-auto p-4">
-          <ReactPlayer
-            url={
-              "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-            }
-            playing={true}
-            controls={true}
-            loop={true}
-            muted={true}
-            playsinline={true}
-            width={"100%"}
-            height={"auto"}
-          />
+          <video
+            ref={blobVideoRef}
+            id="blob_video"
+            controls
+            autoPlay
+            src={localVideoLink}
+          ></video>
         </div>
         <div className="flex flex-col justify-center">
-          <Button size="large">Done!</Button>
-          <Button size="large">Done!</Button>
+          <div className="flex justify-between">
+            <div>
+              <InputNumber
+                min={0}
+                max={maxTrimValue}
+                value={limitMinTrimValue}
+                onChange={(value) => setlimitMinTrimValue(value)}
+                className="mr-[10px]"
+              />
+              <InputNumber
+                min={0}
+                max={maxTrimValue}
+                value={limitMaxTrimValue}
+                onChange={(value) => setlimitMaxTrimValue(value)}
+              />
+            </div>
+            <Select
+              defaultValue={outFormat}
+              style={{ width: 100 }}
+              onChange={(value) => setOutFormat(value)}
+              options={[
+                { value: "webm", label: "WEBM" },
+                { value: "mp4", label: "MP4" },
+              ]}
+            />
+          </div>
+          <Slider
+            range
+            min={1}
+            max={maxTrimValue}
+            value={[limitMinTrimValue, limitMaxTrimValue]}
+            defaultValue={[limitMinTrimValue, limitMaxTrimValue]}
+            onChange={(value) => {
+              setlimitMinTrimValue(value[0]);
+              setlimitMaxTrimValue(value[1]);
+            }}
+          />
         </div>
       </div>
     </div>

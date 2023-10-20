@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button, Radio, Modal } from "antd";
 import {
   ChromeOutlined,
@@ -6,7 +7,13 @@ import {
   VideoCameraOutlined,
   WindowsOutlined,
 } from "@ant-design/icons";
-import { QUALITYOPTIONS, LABEL } from "../../utils/constants";
+import {
+  QUALITYOPTIONS,
+  LABEL,
+  BLOB_LINKS,
+  RECORDING_DURATION,
+} from "../../utils/constants";
+
 import "./style.css";
 import WebcamDrag from "../../Components/WebcamDrag";
 import TimeCounterModal from "../../Components/TimeCounterModal";
@@ -14,7 +21,9 @@ import LabelSelect from "../../Components/LabelSelect";
 import AnnotationTool from "../../Components/AnnotationTool";
 
 let stream,
-  mediaRecorder = null;
+  mediaRecorder,
+  recordingStartTime,
+  recordingEndTime = null;
 
 // Recording mode labels & icons
 const modeLabels = [
@@ -39,6 +48,7 @@ const modeLabels = [
 ];
 
 function Record() {
+  const navigate = useNavigate();
   const [recordingMode, setRecordingMode] = useState(0); // Recording status: 0(Full Screen), 1(Window), 2(Current Tab), 3(Camera only)
   const [qualityDefaultValue, setQualityDefaultValue] = useState("3000000"); // Recording quality status
 
@@ -222,12 +232,20 @@ function Record() {
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "screen-recording.mp4";
-        a.click();
-        URL.revokeObjectURL(url);
-        setRecordedChunks([]);
+
+        recordingEndTime = new Date().getTime();
+        localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
+        localStorage.setItem(
+          RECORDING_DURATION,
+          (recordingEndTime - recordingStartTime).toString()
+        );
+        navigate("/editMedia");
+        // const a = document.createElement("a");
+        // a.href = url;
+        // a.download = "screen-recording.mp4";
+        // a.click();
+        // URL.revokeObjectURL(url);
+        // setRecordedChunks([]);
       };
     }
 
@@ -241,6 +259,8 @@ function Record() {
 
   // Closing time counter modal & start recording
   const onCloseModalStartRecording = () => {
+    recordingStartTime = new Date().getTime();
+
     mediaRecorder = new MediaRecorder(stream, {
       mimeType: "video/webm; codecs=vp9",
       videoBitsPerSecond: Number(qualityDefaultValue),
