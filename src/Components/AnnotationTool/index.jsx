@@ -13,48 +13,37 @@ import {
   MdOutlineModeEditOutline,
   MdTitle,
   MdDeleteOutline,
-  MdOutlineRectangle,
-  MdOutlineCircle,
-  MdShowChart,
   MdOutlinePalette,
 } from "react-icons/md";
 
-// import TextEditor from "../TextEditor";
-// import FreeHand from "../FreeHand";
+import ShapePanel from "./ShapePanel";
+import AnnotationPlayField from "./AnnotationPlayField";
 
 import "./style.css";
 
 const AnnotationTool = (props) => {
-  const { recordingStarted, handleChangeRecordingStarted } = props;
+  const { recordingStarted, handleSaveRecording } = props;
   const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [visibleVolumeTrack, setVisibleVolumeTrack] = useState(true); // enable/disable audio track
   const [visibleMicrophoneTrack, setVisibleMicrophoneTrack] = useState(true); // enable/disable microphone track
-  const [currentSelectedOption, setCurrentSelectedOption] = useState("0"); // Now, this is the option you selected. 0: Delete, 1: ColorPicker, 2: TextEditor, 3: Shape, 4: FreeHand
+  const [currentSelectedOption, setCurrentSelectedOption] = useState(9); // Now, this is the option you selected. 0: Delete, 1: ColorPicker, 2: TextEditor, 3: Shape, 4: FreeHand
   const [nowColor, setNowColor] = useState("#ff0000"); // Setted color by Color Picker
-  const [nowPencilSize, setNowPencilSize] = useState(20); // Setted size by pencil scroll
+  const [nowSize, setNowSize] = useState(40); // Setted size by pencil scroll
+  const [annotationToolsOpen, setAnnotationToolsOpen] = useState(false);
+
+  const annotationBadge = {
+    dot: true,
+    color: nowColor,
+  };
 
   const freeHandContent = (
     <div>
       <Slider
         vertical
-        defaultValue={nowPencilSize}
+        defaultValue={nowSize}
         style={{ display: "inline-block", height: 100 }}
-        onChange={(value) => setNowPencilSize(value)}
+        onChange={(value) => setNowSize(value)}
       />
-    </div>
-  );
-
-  const shapeContent = (
-    <div className="flex flex-col w-auto p-1">
-      <div className="hover:text-[#ff0000]">
-        <MdOutlineRectangle size={50} className="mb-1" />
-      </div>
-      <div className="hover:text-[#ff0000]">
-        <MdOutlineCircle size={50} />
-      </div>
-      <div className="hover:text-[#ff0000]">
-        <MdShowChart size={50} />
-      </div>
     </div>
   );
 
@@ -65,14 +54,13 @@ const AnnotationTool = (props) => {
           <div className="absolute !z-[50] hover:!z-50">
             {!switchDropEditMenu ? (
               <FloatButton.Group
-                // trigger="click"
                 type="primary"
                 style={{
                   left: 20,
                   bottom: 20,
                 }}
               >
-                <FloatButton
+                {/* <FloatButton
                   icon={
                     visibleMicrophoneTrack ? (
                       <MdOutlineVolumeUp />
@@ -87,20 +75,23 @@ const AnnotationTool = (props) => {
                 <FloatButton
                   icon={visibleVolumeTrack ? <MdMicNone /> : <MdMicOff />}
                   onClick={() => setVisibleVolumeTrack(!visibleVolumeTrack)}
-                />
+                /> */}
 
                 <FloatButton.Group
+                  open={annotationToolsOpen}
                   trigger="click"
                   type="primary"
                   style={{
                     left: 20,
-                    bottom: 185,
+                    bottom: 20,
+                    marginBottom: 55,
                   }}
                   icon={<MdOutlinePalette />}
+                  onClick={() => setAnnotationToolsOpen(!annotationToolsOpen)}
                 >
                   <FloatButton
                     icon={<MdDeleteOutline />}
-                    onClick={() => setCurrentSelectedOption("0")}
+                    onClick={() => setCurrentSelectedOption(0)}
                   />
                   <FloatButton
                     className="color_picker"
@@ -112,20 +103,24 @@ const AnnotationTool = (props) => {
                         onChange={(value, hex) => setNowColor(hex)}
                       />
                     }
-                    onClick={() => setCurrentSelectedOption("1")}
+                    onClick={() => {}}
                   ></FloatButton>
                   <FloatButton
                     icon={<MdTitle />}
-                    onClick={() => setCurrentSelectedOption("2")}
+                    badge={currentSelectedOption === 2 && annotationBadge}
+                    onClick={() => setCurrentSelectedOption(2)}
                   />
                   <Popover
                     placement="rightTop"
                     trigger={"hover"}
-                    content={shapeContent}
+                    content={
+                      <ShapePanel color={nowColor} strokeWidth={nowSize / 4} />
+                    }
                   >
                     <FloatButton
                       icon={<IoShapesOutline />}
-                      onClick={() => setCurrentSelectedOption("3")}
+                      badge={currentSelectedOption === 3 && annotationBadge}
+                      onClick={() => setCurrentSelectedOption(3)}
                     />
                   </Popover>
                   <Popover
@@ -135,7 +130,8 @@ const AnnotationTool = (props) => {
                   >
                     <FloatButton
                       icon={<MdOutlineModeEditOutline />}
-                      onClick={() => setCurrentSelectedOption("4")}
+                      badge={currentSelectedOption === 4 && annotationBadge}
+                      onClick={() => setCurrentSelectedOption(4)}
                     />
                   </Popover>
                 </FloatButton.Group>
@@ -160,13 +156,13 @@ const AnnotationTool = (props) => {
                 <FloatButton
                   icon={<MdClose />}
                   onClick={() => {
-                    handleChangeRecordingStarted(false);
+                    handleSaveRecording();
                   }}
                 />
                 <FloatButton
                   icon={<MdCheck />}
                   onClick={() => {
-                    handleChangeRecordingStarted(false);
+                    handleSaveRecording();
                   }}
                 />
                 <FloatButton
@@ -179,9 +175,11 @@ const AnnotationTool = (props) => {
             )}
           </div>
 
-          {/* {currentSelectedOption === "2" ?? <TextEditor />} */}
-          {/* {currentSelectedOption === "3" ?? <Shape />} */}
-          {/* {currentSelectedOption === "4" ?? <FreeHand />} */}
+          <AnnotationPlayField
+            nowColor={nowColor}
+            nowSize={nowSize}
+            currentSelectedOption={currentSelectedOption}
+          />
         </div>
       </div>
     </>
