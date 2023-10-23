@@ -1,160 +1,101 @@
-import React, { useRef, useCallback, useState, useEffect } from "react";
-import { Layer, Stage } from "react-konva";
+import React, { useRef, useState, useEffect } from "react";
+import { fabric } from "fabric";
 
-import { DRAG_DATA_KEY, SHAPE_TYPES } from "../../utils/constants";
-import {
-  createCircle,
-  createRectangle,
-  reset,
-} from "../ShapeCanvasField/state";
-import FreeHand from "../FreeHand";
-import ShapeCanvasField from "../ShapeCanvasField";
-import TextEditor from "../TextEditor";
+import Paint from "../Paint";
+import { KEY_CODE, ANNOTATION_TOOL_SELECTION } from "../../utils/constants";
 
-let tool = "pen";
-
-const handleDragOver = (event) => event.preventDefault();
+// 0: Delete, 1: TextEditor, 2: Rect, 3: Ellipse, 4: Triangle, 5: FreeHand 6: Seleted, 7:Undo
 
 const AnnotationPlayField = (props) => {
-  const { nowColor, nowSize, currentSelectedOption } = props;
-  const [lines, setLines] = useState([]);
-  const isDrawing = useRef(false);
-  const stageRef = useRef();
+  const {
+    nowColor,
+    nowSize,
+    currentSelectedOption,
+    handleCurrentSelectedOption,
+  } = props;
+  const [readonly, setReadonly] = useState(false);
+  const [canvas, setCanvas] = useState();
+  const [canvasState, setCanvasState] = useState([]);
+  const [currentStateIndex, setCurrentStateIndex] = useState(-1);
+
+  const canvasEl = useRef(null);
 
   useEffect(() => {
-    if (currentSelectedOption === 0) {
-      reset();
-      setLines([]);
-      setTexts([]);
-    }
-  }, [currentSelectedOption]);
+    const canvas = new fabric.Canvas(canvasEl.current);
+    setCanvas(canvas);
 
-  const [texts, setTexts] = useState([]);
+    const handleKey = (event) => {
+      if (event.keyCode === KEY_CODE.DELETE) {
+        const object = canvas.getActiveObject();
 
-  const handleDrop = useCallback(
-    (event) => {
-      if (currentSelectedOption !== 3) {
-        return;
-      }
-      const draggedData = event.nativeEvent.dataTransfer.getData(DRAG_DATA_KEY);
-
-      if (draggedData) {
-        const {
-          offsetX,
-          offsetY,
-          type,
-          clientHeight,
-          clientWidth,
-          color,
-          strokeWidth,
-        } = JSON.parse(draggedData);
-
-        stageRef.current.setPointersPositions(event);
-
-        const coords = stageRef.current.getPointerPosition();
-
-        if (type === SHAPE_TYPES.RECT) {
-          // rectangle x, y is at the top,left corner
-          createRectangle({
-            x: coords.x - offsetX,
-            y: coords.y - offsetY,
-            color: color,
-            strokeWidth: strokeWidth,
-          });
-        } else if (type === SHAPE_TYPES.CIRCLE) {
-          // circle x, y is at the center of the circle
-          createCircle({
-            x: coords.x - (offsetX - clientWidth / 2),
-            y: coords.y - (offsetY - clientHeight / 2),
-            color: color,
-            strokeWidth: strokeWidth,
-          });
+        if (object) {
+          canvas.remove(object);
         }
       }
-    },
-    [currentSelectedOption]
-  );
+    };
 
-  const handleMouseDown = (e) => {
-    if (currentSelectedOption !== 4) {
-      return;
+    window.addEventListener("keyup", handleKey);
+
+    return () => {
+      setCanvas(undefined);
+      canvas.dispose();
+      window.removeEventListener("keyup", handleKey);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!canvas) return;
+
+    canvas.selection =
+      currentSelectedOption === ANNOTATION_TOOL_SELECTION.IS_SELETED; // Selected canvas
+
+    if (currentSelectedOption === ANNOTATION_TOOL_SELECTION.DELETE) {
+      canvas.clear();
     }
-    isDrawing.current = true;
-    const pos = e.target.getStage().getPointerPosition();
-    setLines([
-      ...lines,
-      { tool, points: [pos.x, pos.y], color: nowColor, size: nowSize / 4 },
-    ]);
+
+    if (currentSelectedOption === ANNOTATION_TOOL_SELECTION.UNDO) {
+      if (currentStateIndex <= 0) {
+        return;
+      }
+
+      canvas.loadFromJSON(canvasState[currentStateIndex - 1], () => {
+        canvas.renderAll();
+        setCurrentStateIndex((prevState) => prevState - 1);
+      });
+    }
+  }, [currentSelectedOption, canvas]);
+
+  const handleCanvasDrawEnd = () => {
+    handleCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.IS_SELETED);
   };
 
-  const handleMouseMove = (e) => {
-    if (currentSelectedOption !== 4) {
-      return;
-    }
-    // no drawing - skipping
-    if (!isDrawing.current) {
-      return;
-    }
-    const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
-    let lastLine = lines[lines.length - 1];
-    // add point
-    lastLine.points = lastLine.points.concat([point.x, point.y]);
+  const updateCanvasState = (value) => {
+    let jsonData = value.toJSON();
+    let canvasAsJson = JSON.stringify(jsonData);
 
-    // replace last
-    lines.splice(lines.length - 1, 1, lastLine);
-    setLines(lines.concat());
-  };
-
-  const handleMouseUp = (e) => {
-    if (currentSelectedOption === 4) {
-      isDrawing.current = false;
-    } else if (currentSelectedOption === 2) {
-      // const pos = e.target.getStage().getPointerPosition();
-      setTexts([
-        ...texts,
-        {
-          text: "Here is editable text editor.",
-          x: e.pageX,
-          y: e.pageY,
-          fontSize: nowSize,
-          draggable: true,
-          width: 400,
-          ellipsis: true,
-          fontFamily: "changa",
-          fill: nowColor,
-          align: "center",
-          id: (texts.length + 1).toString(),
-        },
-      ]);
+    if (
+      currentStateIndex !== -1 &&
+      currentStateIndex < canvasState.length - 1
+    ) {
+      setCanvasState(canvasState.slice(0, currentStateIndex + 1));
     }
+
+    setCanvasState((prevState) => [...prevState, canvasAsJson]);
+    setCurrentStateIndex(canvasState.length);
   };
 
   return (
     <>
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onClick={handleMouseUp}
-      >
-        <Stage
-          width={window.innerWidth}
-          height={window.innerHeight}
-          ref={stageRef}
-          onMouseDown={handleMouseDown}
-          onMousemove={handleMouseMove}
-          // onMouseup={handleMouseUp}
-        >
-          <Layer>
-            <TextEditor
-              texts={texts}
-              handleSetText={(value) => setTexts(value)}
-            />
-            <FreeHand lines={lines} />
-            <ShapeCanvasField />
-          </Layer>
-        </Stage>
-      </div>
+      <Paint
+        ref={canvasEl}
+        canvas={canvas}
+        drawMode={currentSelectedOption}
+        penColor={nowColor}
+        penSize={nowSize}
+        readonly={readonly}
+        onDrawEnd={handleCanvasDrawEnd}
+        handleUpdateCanvasState={(value) => updateCanvasState(value)}
+      ></Paint>
     </>
   );
 };

@@ -38,7 +38,8 @@ export const XCOUNTERS = [1, 1.5, 2];
 
 export const SHAPE_TYPES = {
   RECT: "rect",
-  CIRCLE: "circle",
+  ELLIPSE: "ellipse",
+  TRIAGNLE: "triangle",
 };
 
 export const DEFAULTS_SHAPE_VALUE = {
@@ -70,9 +71,25 @@ export const LIMITS_SHAPE_VALUE = {
 };
 
 export const KEY_CODE = {
-  RETURN_KEY: 13,
-  ESCAPE_KEY: 27,
+  RETURN: 13,
+  ESCAPE: 27,
+  DELETE: 46,
 };
+
+// 0: Delete, 1: TextEditor, 2: Rect, 3: Ellipse, 4: Triangle, 5: FreeHand 6: Seleted, 7:Undo
+export const ANNOTATION_TOOL_SELECTION = {
+  DELETE: "delete",
+  TEXT_EDITOR: "text_editor",
+  RECT: "rectangle",
+  ELLIPSE: "ellipse",
+  TRI: "triangle",
+  FREE_HAND: "free_hand",
+  IS_SELETED: "is_selected",
+  UNDO: "undo",
+};
+
+export const CANVAS_WIDTH = window.innerWidth;
+export const CANVAS_HEIGHT = window.innerHeight;
 
 export const BLOB_LINKS = "get_blob_link";
 export const RECORDING_DURATION = "recording_duration";

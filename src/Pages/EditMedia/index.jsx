@@ -45,6 +45,8 @@ function EditMedia() {
   const blobVideoRef = useRef();
 
   useEffect(() => {
+    let chunks = JSON.parse(localStorage.getItem("chunks"));
+
     let links = JSON.parse(localStorage.getItem(BLOB_LINKS));
     links ? setLocalVideoLink(links) : setLocalVideoLink();
   }, []);

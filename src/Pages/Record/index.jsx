@@ -21,7 +21,11 @@ import LabelSelect from "../../Components/LabelSelect";
 import AnnotationTool from "../../Components/AnnotationTool";
 
 let stream,
+  audioStream,
+  microphoneStream,
   mediaRecorder,
+  audioRecorder,
+  microphoneRecorder,
   recordingStartTime,
   recordingEndTime = null;
 
@@ -132,6 +136,30 @@ function Record() {
   }, [mediaRecorder]);
 
   useEffect(() => {
+    if (audioRecorder && recordingStarted) {
+      audioRecorder.ondataavailable = (e) => {
+        let temp = recordedChunks;
+        temp.push(e.data);
+        setRecordedChunks(temp);
+      };
+
+      audioRecorder.start();
+    }
+  }, [audioRecorder]);
+
+  useEffect(() => {
+    if (microphoneRecorder && recordingStarted) {
+      microphoneRecorder.ondataavailable = (e) => {
+        let temp = recordedChunks;
+        temp.push(e.data);
+        setRecordedChunks(temp);
+      };
+
+      microphoneRecorder.start();
+    }
+  }, [microphoneRecorder]);
+
+  useEffect(() => {
     const onEnded = () => {
       onSaveRecording();
     };
@@ -162,6 +190,9 @@ function Record() {
             video: {
               deviceId: cameraSource ? cameraSource : undefined,
             },
+          });
+
+          microphoneRecorder = await navigator.mediaDevices.getUserMedia({
             audio: microphoneSource
               ? {
                   deviceId: microphoneSource,
@@ -172,11 +203,11 @@ function Record() {
           setVisibleTimeCounterModal(true);
         }
       } else {
-        const audioContext = new AudioContext();
-        let audioIn_01, audioIn_02;
-        let dest = audioContext.createMediaStreamDestination();
+        let tempScreenStream = new MediaStream();
+        let tempAudioStream = new MediaStream();
+        let tempMicrophoneStream = new MediaStream();
 
-        let screenStream = await navigator.mediaDevices.getDisplayMedia({
+        let screenAudioStream = await navigator.mediaDevices.getDisplayMedia({
           video: {
             displaySurface:
               recordingMode === 0
@@ -187,37 +218,25 @@ function Record() {
           },
           audio: true,
         });
+        console.log("object~~~~~~~~~~~~~~~~~~~~~~~~1");
+        tempScreenStream.addTrack(screenAudioStream.getVideoTracks()[0]);
+        console.log("object~~~~~~~~~~~~~~~~~~~~~~~~2");
+        tempAudioStream.addTrack(screenAudioStream.getAudioTracks()[0]);
 
-        if (screenStream.getAudioTracks()[0]) {
-          let screenAudioMediaStream = new MediaStream();
-          screenAudioMediaStream.addTrack(screenStream.getAudioTracks()[0]);
+        stream = tempScreenStream;
+        audioStream = tempAudioStream;
 
-          audioIn_01 = audioContext.createMediaStreamSource(
-            screenAudioMediaStream
-          );
-          audioIn_01.connect(dest);
-        }
+        console.log("object~~~~~~~~~~~~~~~~~~~~~~~~3");
 
         if (microphoneSource !== "Disabled") {
-          let microphoneStream = await navigator.mediaDevices.getUserMedia({
+          let microStream = await navigator.mediaDevices.getUserMedia({
             audio: { deviceId: microphoneSource },
           });
+          tempMicrophoneStream.addTrack(microStream.getAudioTracks()[0]);
 
-          if (microphoneStream.getAudioTracks()[0]) {
-            let micAudioMediaStream = new MediaStream();
-            micAudioMediaStream.addTrack(microphoneStream?.getAudioTracks()[0]);
-
-            audioIn_02 =
-              audioContext.createMediaStreamSource(micAudioMediaStream);
-            audioIn_02.connect(dest);
-          }
+          microphoneStream = tempMicrophoneStream;
         }
 
-        let mergedMediaStream = new MediaStream();
-        mergedMediaStream.addTrack(screenStream.getVideoTracks()[0]);
-        mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
-
-        stream = mergedMediaStream;
         setVisibleTimeCounterModal(true);
       }
     } catch (error) {
@@ -227,34 +246,43 @@ function Record() {
 
   // Saving & downloading chunks into file
   const onSaveRecording = () => {
-    if (mediaRecorder) {
+    if (mediaRecorder && audioRecorder && microphoneRecorder) {
       mediaRecorder.stop();
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: "video/mp4" });
-        const url = URL.createObjectURL(blob);
+      audioRecorder.stop();
+      microphoneRecorder.stop();
+      // mediaRecorder.onstop = () => {
 
-        recordingEndTime = new Date().getTime();
-        localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
-        localStorage.setItem(
-          RECORDING_DURATION,
-          (recordingEndTime - recordingStartTime).toString()
-        );
-        navigate("/editMedia");
-        // const a = document.createElement("a");
-        // a.href = url;
-        // a.download = "screen-recording.mp4";
-        // a.click();
-        // URL.revokeObjectURL(url);
-        // setRecordedChunks([]);
-      };
+      const blob = new Blob(recordedChunks, { type: "video/mp4" });
+      const url = URL.createObjectURL(blob);
+
+      // localStorage.setItem("chunks", JSON.stringify(recordedChunks));
+
+      // recordingEndTime = new Date().getTime();
+      // localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
+      // localStorage.setItem(
+      //   RECORDING_DURATION,
+      //   (recordingEndTime - recordingStartTime).toString()
+      // );
+      // navigate("/editMedia");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "screen-recording.mp4";
+      a.click();
+      URL.revokeObjectURL(url);
+      setRecordedChunks([]);
     }
-
-    stream?.getTracks().forEach(function (track) {
-      track.stop();
-    });
 
     setRecordingStarted(false);
     setVisibleEditMenu(false); // Closing edit tools menu
+  };
+
+  // Pausing and Resuming
+  const onPauseResume = () => {
+    if (mediaRecorder.state === "recording") {
+      mediaRecorder.pause();
+    } else if (mediaRecorder.state === "paused") {
+      mediaRecorder.resume();
+    }
   };
 
   // Closing time counter modal & start recording
@@ -265,6 +293,18 @@ function Record() {
       mimeType: "video/webm; codecs=vp9",
       videoBitsPerSecond: Number(qualityDefaultValue),
     });
+
+    audioRecorder = new MediaRecorder(audioStream, {
+      mimeType: "video/webm; codecs=vp9",
+      videoBitsPerSecond: Number(qualityDefaultValue),
+    });
+
+    if (microphoneStream) {
+      microphoneRecorder = new MediaRecorder(microphoneStream, {
+        mimeType: "video/webm; codecs=vp9",
+        videoBitsPerSecond: Number(qualityDefaultValue),
+      });
+    }
   };
 
   // Checking device permission
@@ -407,7 +447,7 @@ function Record() {
           {/* start or stop button */}
           <div className="flex">
             <Button
-              className="bg-[#ff1616] h-[40px] mt-5 w-full"
+              className="h-[40px] mt-5 w-full"
               type="primary"
               onClick={() => onClickRecordingStartOrStop()}
             >
@@ -428,13 +468,16 @@ function Record() {
         countNumber={countNumber}
       />
 
-      {!visibleEditMenu && (
+      {visibleEditMenu && (
         <AnnotationTool
           recordingStarted={recordingStarted}
           handleSaveRecording={() => {
             onSaveRecording();
           }}
-        ></AnnotationTool>
+          handlePauseResume={() => {
+            onPauseResume();
+          }}
+        />
       )}
     </div>
   );
