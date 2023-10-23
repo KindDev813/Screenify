@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button, Radio, Space, Slider, InputNumber, Select } from "antd";
-import ReactPlayer from "react-player";
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 // import TimeRange from "react-timeline-range-slider";
 
 import { MdCrop, MdOutlinePalette } from "react-icons/md";
@@ -8,6 +8,11 @@ import { TbMovieOff, TbSticker, TbColorFilter } from "react-icons/tb";
 import { GiSettingsKnobs } from "react-icons/gi";
 
 import { LABEL, BLOB_LINKS, RECORDING_DURATION } from "../../utils/constants";
+
+const ffmpeg = createFFmpeg({
+  corePath: "https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js",
+  log: true,
+});
 
 const editToolLabels = [
   {
@@ -42,7 +47,14 @@ function EditMedia() {
   const [maxTrimValue, setMaxTrimValue] = useState("");
   const [localVideoLink, setLocalVideoLink] = useState("");
   const [outFormat, setOutFormat] = useState("webm");
+  const [ffmpegLoaded, setFFmpegLoaded] = useState(false);
   const blobVideoRef = useRef();
+
+  useEffect(() => {
+    ffmpeg.load().then(() => {
+      setFFmpegLoaded(true);
+    });
+  }, []);
 
   useEffect(() => {
     let chunks = JSON.parse(localStorage.getItem("chunks"));
@@ -66,8 +78,26 @@ function EditMedia() {
   }, [localVideoLink]);
 
   const onSaveAndDownload = async () => {
+    ffmpeg.FS("writeFile", "test.mp4", await fetchFile(localVideoLink));
+
+    await ffmpeg.run(
+      "-i",
+      "test.mp4",
+      "-ss",
+      `${limitMinTrimValue}`,
+      "-to",
+      `${limitMaxTrimValue}`,
+      "-f",
+      "mp4",
+      "test1.mp4"
+    );
+    const data = ffmpeg.FS("readFile", "test1.mp4");
+    const gifUrl = URL.createObjectURL(
+      new Blob([data.buffer], { type: "image/gif" })
+    );
+
     const a = document.createElement("a");
-    a.href = localVideoLink;
+    a.href = gifUrl;
     a.download = "screen-recording.mp4";
     a.click();
   };

@@ -68,7 +68,7 @@ const AnnotationTool = (props) => {
                   bottom: 20,
                 }}
               >
-                <FloatButton
+                {/* <FloatButton
                   icon={
                     visibleMicrophoneTrack ? (
                       <MdOutlineVolumeUp />
@@ -83,7 +83,7 @@ const AnnotationTool = (props) => {
                 <FloatButton
                   icon={visibleVolumeTrack ? <MdMicNone /> : <MdMicOff />}
                   onClick={() => setVisibleVolumeTrack(!visibleVolumeTrack)}
-                />
+                /> */}
 
                 <FloatButton.Group
                   open={annotationToolsOpen}
@@ -92,7 +92,7 @@ const AnnotationTool = (props) => {
                   style={{
                     left: 20,
                     bottom: 20,
-                    marginBottom: 165, // 55
+                    marginBottom: 55, // 165
                   }}
                   icon={<MdOutlinePalette />}
                   onClick={() => setAnnotationToolsOpen(!annotationToolsOpen)}

@@ -122,9 +122,10 @@ function Record() {
   useEffect(() => {
     if (mediaRecorder && recordingStarted) {
       mediaRecorder.ondataavailable = (e) => {
+        console.log(e, "~~~~~~~~~~~~~~~~");
         let temp = recordedChunks;
         temp.push(e.data);
-        setRecordedChunks(temp);
+        setRecordedChunks(e.data);
       };
 
       mediaRecorder.start();
@@ -226,32 +227,33 @@ function Record() {
   };
 
   // Saving & downloading chunks into file
-  const onSaveRecording = () => {
+  const onSaveRecording = async () => {
+    await stream?.getTracks().forEach((track) => {
+      track.stop();
+    });
+
     if (mediaRecorder) {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
+        setRecordedChunks(recordedChunks.slice(0, 1));
         const blob = new Blob(recordedChunks, { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
 
-        stream?.getTracks().forEach(function (track) {
-          track.stop();
-        });
+        // localStorage.setItem("chunks", JSON.stringify(recordedChunks));
 
-        localStorage.setItem("chunks", JSON.stringify(recordedChunks));
-
-        recordingEndTime = new Date().getTime();
-        localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
-        localStorage.setItem(
-          RECORDING_DURATION,
-          (recordingEndTime - recordingStartTime).toString()
-        );
-        navigate("/editMedia");
-        // const a = document.createElement("a");
-        // a.href = url;
-        // a.download = "screen-recording.mp4";
-        // a.click();
-        // URL.revokeObjectURL(url);
-        // setRecordedChunks([]);
+        // recordingEndTime = new Date().getTime();
+        // localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
+        // localStorage.setItem(
+        //   RECORDING_DURATION,
+        //   (recordingEndTime - recordingStartTime).toString()
+        // );
+        // navigate("/editMedia");
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "screen-recording.mp4";
+        a.click();
+        URL.revokeObjectURL(url);
+        setRecordedChunks([]);
       };
     }
 
@@ -445,7 +447,7 @@ function Record() {
           handleSaveRecording={() => {
             onSaveRecording();
           }}
-          handlePause={() => {
+          handlePauseResume={() => {
             onPauseResume();
           }}
         />
