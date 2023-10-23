@@ -1,3 +1,4 @@
+import React from "react";
 import Error404 from "./Pages/Error/404";
 import Home from "./Pages/Home";
 import Record from "./Pages/Record";

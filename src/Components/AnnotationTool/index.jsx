@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { FloatButton, ColorPicker, Popover, Slider } from "antd";
 import { IoShapesOutline } from "react-icons/io5";
 import {
@@ -24,7 +24,7 @@ import { ANNOTATION_TOOL_SELECTION } from "../../utils/constants";
 import "./style.css";
 
 const AnnotationTool = (props) => {
-  const { recordingStarted, handleSaveRecording } = props;
+  const { recordingStarted, handleSaveRecording, handlePauseResume } = props;
   const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [visibleVolumeTrack, setVisibleVolumeTrack] = useState(true); // enable/disable audio track
   const [visibleMicrophoneTrack, setVisibleMicrophoneTrack] = useState(true); // enable/disable microphone track
@@ -51,6 +51,10 @@ const AnnotationTool = (props) => {
     </div>
   );
 
+  const handlePauseResumeRecording = () => {
+    setSwitchDropEditMenu(!switchDropEditMenu);
+    handlePauseResume();
+  };
   return (
     <>
       <div className="absolute !z-[34]">
@@ -88,7 +92,7 @@ const AnnotationTool = (props) => {
                   style={{
                     left: 20,
                     bottom: 20,
-                    marginBottom: 55,
+                    marginBottom: 55, // 165
                   }}
                   icon={<MdOutlinePalette />}
                   onClick={() => setAnnotationToolsOpen(!annotationToolsOpen)}
@@ -178,7 +182,7 @@ const AnnotationTool = (props) => {
                 <FloatButton
                   icon={<MdOutlinePause />}
                   onClick={() => {
-                    setSwitchDropEditMenu(true);
+                    handlePauseResumeRecording();
                   }}
                 />
               </FloatButton.Group>
@@ -207,7 +211,7 @@ const AnnotationTool = (props) => {
                 <FloatButton
                   icon={<MdOutlinePlayArrow />}
                   onClick={() => {
-                    setSwitchDropEditMenu(false);
+                    handlePauseResumeRecording();
                   }}
                 />
               </FloatButton.Group>

@@ -3,3 +3,7 @@
   background-color: white;
   opacity: 0.9;
 }
+
+:where(.css-dev-only-do-not-override-amq5gd).ant-btn-primary {
+  background-color: #1677ff !important;
+}

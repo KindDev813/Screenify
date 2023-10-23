@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Radio, Modal } from "antd";
 import {
@@ -124,7 +124,7 @@ function Record() {
       mediaRecorder.ondataavailable = (e) => {
         let temp = recordedChunks;
         temp.push(e.data);
-        setRecordedChunks(temp);
+        setRecordedChunks(e.data);
       };
 
       mediaRecorder.start();
@@ -226,12 +226,18 @@ function Record() {
   };
 
   // Saving & downloading chunks into file
-  const onSaveRecording = () => {
+  const onSaveRecording = async () => {
+    await stream?.getTracks().forEach((track) => {
+      track.stop();
+    });
+
     if (mediaRecorder) {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
+
+        localStorage.setItem("chunks", JSON.stringify(recordedChunks));
 
         recordingEndTime = new Date().getTime();
         localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
@@ -240,21 +246,20 @@ function Record() {
           (recordingEndTime - recordingStartTime).toString()
         );
         navigate("/editMedia");
-        // const a = document.createElement("a");
-        // a.href = url;
-        // a.download = "screen-recording.mp4";
-        // a.click();
-        // URL.revokeObjectURL(url);
-        // setRecordedChunks([]);
       };
     }
 
-    stream?.getTracks().forEach(function (track) {
-      track.stop();
-    });
-
     setRecordingStarted(false);
     setVisibleEditMenu(false); // Closing edit tools menu
+  };
+
+  // Pausing and Resuming
+  const onPauseResume = () => {
+    if (mediaRecorder.state === "recording") {
+      mediaRecorder.pause();
+    } else if (mediaRecorder.state === "paused") {
+      mediaRecorder.resume();
+    }
   };
 
   // Closing time counter modal & start recording
@@ -407,7 +412,7 @@ function Record() {
           {/* start or stop button */}
           <div className="flex">
             <Button
-              className="bg-[#ff1616] h-[40px] mt-5 w-full"
+              className="h-[40px] mt-5 w-full"
               type="primary"
               onClick={() => onClickRecordingStartOrStop()}
             >
@@ -434,7 +439,10 @@ function Record() {
           handleSaveRecording={() => {
             onSaveRecording();
           }}
-        ></AnnotationTool>
+          handlePauseResume={() => {
+            onPauseResume();
+          }}
+        />
       )}
     </div>
   );
