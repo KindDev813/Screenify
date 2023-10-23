@@ -233,6 +233,12 @@ function Record() {
         const blob = new Blob(recordedChunks, { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
 
+        stream?.getTracks().forEach(function (track) {
+          track.stop();
+        });
+
+        localStorage.setItem("chunks", JSON.stringify(recordedChunks));
+
         recordingEndTime = new Date().getTime();
         localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
         localStorage.setItem(
@@ -249,12 +255,17 @@ function Record() {
       };
     }
 
-    stream?.getTracks().forEach(function (track) {
-      track.stop();
-    });
-
     setRecordingStarted(false);
     setVisibleEditMenu(false); // Closing edit tools menu
+  };
+
+  // Pausing and Resuming
+  const onPauseResume = () => {
+    if (mediaRecorder.state === "recording") {
+      mediaRecorder.pause();
+    } else if (mediaRecorder.state === "paused") {
+      mediaRecorder.resume();
+    }
   };
 
   // Closing time counter modal & start recording
@@ -407,7 +418,7 @@ function Record() {
           {/* start or stop button */}
           <div className="flex">
             <Button
-              className="bg-[#ff1616] h-[40px] mt-5 w-full"
+              className="h-[40px] mt-5 w-full"
               type="primary"
               onClick={() => onClickRecordingStartOrStop()}
             >
@@ -434,7 +445,10 @@ function Record() {
           handleSaveRecording={() => {
             onSaveRecording();
           }}
-        ></AnnotationTool>
+          handlePause={() => {
+            onPauseResume();
+          }}
+        />
       )}
     </div>
   );
