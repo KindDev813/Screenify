@@ -1,3 +1,4 @@
+import React from "react";
 import { CAMERA_ALLOWED, CAMERA_BLOCKED } from "../utils/constants";
 import { Select } from "antd";
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Radio, Modal } from "antd";
 import {
@@ -122,7 +122,6 @@ function Record() {
   useEffect(() => {
     if (mediaRecorder && recordingStarted) {
       mediaRecorder.ondataavailable = (e) => {
-        console.log(e, "~~~~~~~~~~~~~~~~");
         let temp = recordedChunks;
         temp.push(e.data);
         setRecordedChunks(e.data);
@@ -235,25 +234,18 @@ function Record() {
     if (mediaRecorder) {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
-        setRecordedChunks(recordedChunks.slice(0, 1));
         const blob = new Blob(recordedChunks, { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
 
-        // localStorage.setItem("chunks", JSON.stringify(recordedChunks));
+        localStorage.setItem("chunks", JSON.stringify(recordedChunks));
 
-        // recordingEndTime = new Date().getTime();
-        // localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
-        // localStorage.setItem(
-        //   RECORDING_DURATION,
-        //   (recordingEndTime - recordingStartTime).toString()
-        // );
-        // navigate("/editMedia");
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "screen-recording.mp4";
-        a.click();
-        URL.revokeObjectURL(url);
-        setRecordedChunks([]);
+        recordingEndTime = new Date().getTime();
+        localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
+        localStorage.setItem(
+          RECORDING_DURATION,
+          (recordingEndTime - recordingStartTime).toString()
+        );
+        navigate("/editMedia");
       };
     }
 

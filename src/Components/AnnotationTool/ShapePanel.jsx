@@ -1,3 +1,4 @@
+import React from "react";
 import { SHAPE_TYPES } from "../../utils/constants";
 import { IoTriangleOutline } from "react-icons/io5";
 import { ANNOTATION_TOOL_SELECTION } from "../../utils/constants";

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FloatButton, ColorPicker, Popover, Slider } from "antd";
 import { IoShapesOutline } from "react-icons/io5";
 import {
