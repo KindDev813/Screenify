@@ -4,6 +4,7 @@ import { Radio, Space } from "antd";
 import { MdCrop, MdOutlinePalette } from "react-icons/md";
 import { TbMovieOff, TbSticker, TbColorFilter } from "react-icons/tb";
 import { GiSettingsKnobs } from "react-icons/gi";
+import { HiOutlineMusicalNote } from "react-icons/hi2";
 
 import { LABEL } from "../../utils/constants";
 
@@ -15,6 +16,12 @@ const editToolLabels = [
   {
     label: LABEL.CROP,
     icon: <MdCrop style={{ fontSize: "30px" }} className="mx-auto" />,
+  },
+  {
+    label: LABEL.BGMUSIC,
+    icon: (
+      <HiOutlineMusicalNote style={{ fontSize: "30px" }} className="mx-auto" />
+    ),
   },
   {
     label: LABEL.FINETUNE,

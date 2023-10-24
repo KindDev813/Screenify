@@ -5,11 +5,16 @@ import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import { BLOB_LINKS, LABEL } from "../../utils/constants";
 import TrimSliderControl from "../../Components/TrimSliderControl";
 // import CropControl from "../../Components/CropControl";
+import BgMusicOverControl from "../../Components/BgMusicOverControl";
 import VideoPlayer from "../../Components/VideoPlayer";
 import EditToolMenu from "../../Components/EditToolMenu";
-import { trimVideoFFmpeg, cropVideoFFmpeg } from "../../utils/functions";
+import {
+  trimVideoFFmpeg,
+  cropVideoFFmpeg,
+  musicOverFFmpeg,
+} from "../../utils/functions";
 
-const ffmpeg = createFFmpeg({ log: true });
+const ffmpeg = createFFmpeg({ log: false });
 
 function EditMedia() {
   const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
@@ -17,9 +22,10 @@ function EditMedia() {
   const [localVideoLink, setLocalVideoLink] = useState("");
   const [outFormat, setOutFormat] = useState("mp4");
   const [loadingVisible, setLoadingVisible] = useState(true);
-  const [currentTool, setCurrentTool] = useState(LABEL.TRIM);
+  const [currentTool, setCurrentTool] = useState(LABEL.BGMUSIC);
   const [cropData, setCropData] = useState();
   const [downUrl, setDownUrl] = useState("");
+  const [overMusic, setOverMusic] = useState(null);
 
   useEffect(() => {
     ffmpeg.load().then(() => {
@@ -40,6 +46,9 @@ function EditMedia() {
         break;
       case LABEL.CROP:
         await cropModeDown(fileName);
+        break;
+      case LABEL.BGMUSIC:
+        await musicOverModeDown(fileName);
         break;
     }
 
@@ -76,6 +85,17 @@ function EditMedia() {
     setDownUrl(url);
   };
 
+  const musicOverModeDown = async (fileName) => {
+    let url = await musicOverFFmpeg(
+      ffmpeg,
+      fileName,
+      localVideoLink,
+      overMusic
+    );
+
+    setDownUrl(url);
+  };
+
   return (
     <Spin spinning={loadingVisible} size="large" delay={500}>
       <div className="grid grid-cols-7 gap-4  w-full h-screen p-4 max-w-[70%] mx-auto">
@@ -85,7 +105,7 @@ function EditMedia() {
         />
 
         <div className="col-span-6 flex flex-col justify-evenly h-full my-auto p-4 border-2 border-[#00000057] rounded-lg">
-          <div className="flex justify-end">
+          <div className="flex justify-end p-4">
             <Button
               type="primary"
               shape="round"
@@ -112,7 +132,12 @@ function EditMedia() {
               handleOutFormat={(value) => setOutFormat(value)}
             />
           )}
-          {/* {currentTool === LABEL.CROP && <CropControl />} */}
+          {currentTool === LABEL.BGMUSIC && (
+            <BgMusicOverControl
+              overMusic={overMusic}
+              handleOverMusic={(value) => setOverMusic(value)}
+            />
+          )}
         </div>
       </div>
     </Spin>
