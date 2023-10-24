@@ -37,8 +37,8 @@ const TrimSliderControl = (props) => {
   }, [limitMinTrimValue, limitMaxTrimValue, outFormat]);
 
   return (
-    <div className="flex flex-col justify-center">
-      <div className="flex justify-between">
+    <div className="flex flex-col justify-center p-5">
+      <div className="flex justify-between ">
         <div>
           <InputNumber
             min={0}

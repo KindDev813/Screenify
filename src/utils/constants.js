@@ -13,6 +13,7 @@ export const LABEL = {
   RECORDING_QUALITY: "Recording quality",
   TRIM: "Trim",
   CROP: "Crop",
+  BGMUSIC: "Music Over",
   FINETUNE: "Finetune",
   FILTER: "Filter",
   ANNOTATE: "Annotate",
