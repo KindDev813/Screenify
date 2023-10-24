@@ -270,7 +270,7 @@ function Record() {
     recordingStartTime = new Date().getTime();
 
     mediaRecorder = new MediaRecorder(stream, {
-      mimeType: "video/webm;codecs=h264,opus",
+      mimeType: "video/mp4;codecs=h264,opus",
       videoBitsPerSecond: Number(qualityDefaultValue),
     });
   };
