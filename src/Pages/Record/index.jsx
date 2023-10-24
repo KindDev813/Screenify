@@ -20,8 +20,7 @@ import TimeCounterModal from "../../Components/TimeCounterModal";
 import LabelSelect from "../../Components/LabelSelect";
 import AnnotationTool from "../../Components/AnnotationTool";
 
-let stream,
-  mediaRecorder,
+let mediaRecorder,
   recordingStartTime,
   recordingEndTime = null;
 
@@ -65,6 +64,8 @@ function Record() {
   const [recordedChunks, setRecordedChunks] = useState([]); // Recorded chunks
   const [microphoneOptions, setMicrophoneOptions] = useState([]); // Microphone source list
   const [cameraOptions, setCameraOptions] = useState([]); // Camera source list
+
+  const [stream, setStream] = useState(null);
 
   // Get camera & audio device
   useEffect(() => {
@@ -158,7 +159,7 @@ function Record() {
         if (cameraSource === "Disabled") {
           alertModal("Please enable your camera(microphone)!");
         } else {
-          stream = await navigator.mediaDevices.getUserMedia({
+          let stream_1 = await navigator.mediaDevices.getUserMedia({
             video: {
               deviceId: cameraSource ? cameraSource : undefined,
             },
@@ -168,6 +169,8 @@ function Record() {
                 }
               : false,
           });
+
+          setStream(stream_1);
 
           setVisibleTimeCounterModal(true);
         }
@@ -217,7 +220,7 @@ function Record() {
         mergedMediaStream.addTrack(screenStream.getVideoTracks()[0]);
         mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
 
-        stream = mergedMediaStream;
+        setStream(mergedMediaStream);
         setVisibleTimeCounterModal(true);
       }
     } catch (error) {
@@ -227,10 +230,6 @@ function Record() {
 
   // Saving & downloading chunks into file
   const onSaveRecording = async () => {
-    await stream?.getTracks().forEach((track) => {
-      track.stop();
-    });
-
     if (mediaRecorder) {
       mediaRecorder.stop();
       mediaRecorder.onstop = () => {
@@ -246,6 +245,10 @@ function Record() {
           (recordingEndTime - recordingStartTime).toString()
         );
         navigate("/editMedia");
+
+        stream.getTracks().forEach((element) => {
+          element.stop();
+        });
       };
     }
 
@@ -267,7 +270,7 @@ function Record() {
     recordingStartTime = new Date().getTime();
 
     mediaRecorder = new MediaRecorder(stream, {
-      mimeType: "video/webm; codecs=vp9",
+      mimeType: "video/webm;codecs=h264,opus",
       videoBitsPerSecond: Number(qualityDefaultValue),
     });
   };
