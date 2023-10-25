@@ -1,3 +1,4 @@
+import React from "react";
 import { fabric } from "fabric";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../../utils/constants";
 

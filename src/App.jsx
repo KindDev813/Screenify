@@ -6,7 +6,6 @@ import Routes from "./Routes";
 
 function App() {
   const pages = useRoutes(Routes);
-
   return <div>{pages}</div>;
 }
 
