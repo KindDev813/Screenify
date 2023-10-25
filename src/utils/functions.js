@@ -1,3 +1,4 @@
+import React from "react";
 import { fetchFile } from "@ffmpeg/ffmpeg";
 
 export const trimVideoFFmpeg = async (
@@ -37,18 +38,21 @@ export const cropVideoFFmpeg = async (
   ffmpeg,
   fileName,
   link,
-  width,
-  height,
-  positionX,
-  positionY
+  cropDimensions,
+  origDimensions
 ) => {
+  let width = cropDimensions.width * origDimensions.width;
+  let height = cropDimensions.height * origDimensions.height;
+  let X = cropDimensions.x * origDimensions.width;
+  let Y = cropDimensions.y * origDimensions.height;
+
   try {
     ffmpeg.FS("writeFile", `input_${fileName}.mp4`, await fetchFile(link));
     await ffmpeg.run(
       "-i",
       `input_${fileName}.mp4`,
       "-filter:v",
-      `crop=${width}:${height}:${positionX}:${positionY}`,
+      `crop=${width}:${height}:${X}:${Y}`,
       "-r",
       "24",
       "-f",
@@ -99,4 +103,31 @@ export const musicOverFFmpeg = async (ffmpeg, fileName, link, overMusic) => {
   } catch (error) {
     console.log("Something went wrong!", error);
   }
+};
+
+export const getVideoDimensions = async (blobUrl) => {
+  return new Promise((resolve, reject) => {
+    const videoElem = document.createElement("video");
+
+    videoElem.addEventListener(
+      "loadedmetadata",
+      function () {
+        const width = this.videoWidth;
+        const height = this.videoHeight;
+        resolve({ width, height });
+      },
+      false
+    );
+
+    // Error handling
+    videoElem.addEventListener(
+      "error",
+      function () {
+        reject("An error occurred whilst trying to load the video");
+      },
+      false
+    );
+    videoElem.src = blobUrl;
+    videoElem.load();
+  });
 };

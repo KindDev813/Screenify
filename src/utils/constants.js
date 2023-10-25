@@ -1,5 +1,7 @@
-export const CAMERA_ALLOWED = "You can use your camera!";
-export const CAMERA_BLOCKED = "Please allow permission of your camera!";
+import React from "react";
+
+export const CAMERA_ALLOWED = "You can use your device!";
+export const CAMERA_BLOCKED = "Please allow permission of your device!";
 export const MICROPHONE_ALLOWED = "You can use your microphone!";
 export const MICROPHONE_BLOCKED = "Please allow permission of your microphone!";
 
@@ -92,7 +94,11 @@ export const ANNOTATION_TOOL_SELECTION = {
 export const CANVAS_WIDTH = window.innerWidth;
 export const CANVAS_HEIGHT = window.innerHeight;
 
-export const BLOB_LINKS = "get_blob_link";
-export const RECORDING_DURATION = "recording_duration";
+export const LOCAL_STORAGE = {
+  BLOB_LINKS: "get_blob_link",
+  RECORDING_DURATION: "recording_duration",
+  VIDEO_WIDTH: "video_width",
+  VIDEO_HEIGHT: "video_height",
+};
 
 export const DRAG_DATA_KEY = "__drag_data_payload__";

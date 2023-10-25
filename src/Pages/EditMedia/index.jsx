@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Spin, Button } from "antd";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 
-import { BLOB_LINKS, LABEL } from "../../utils/constants";
+import { LOCAL_STORAGE, LABEL } from "../../utils/constants";
 import TrimSliderControl from "../../Components/TrimSliderControl";
 // import CropControl from "../../Components/CropControl";
 import BgMusicOverControl from "../../Components/BgMusicOverControl";
@@ -12,6 +12,7 @@ import {
   trimVideoFFmpeg,
   cropVideoFFmpeg,
   musicOverFFmpeg,
+  getVideoDimensions,
 } from "../../utils/functions";
 
 const ffmpeg = createFFmpeg({ log: false });
@@ -22,33 +23,47 @@ function EditMedia() {
   const [localVideoLink, setLocalVideoLink] = useState("");
   const [outFormat, setOutFormat] = useState("mp4");
   const [loadingVisible, setLoadingVisible] = useState(true);
-  const [currentTool, setCurrentTool] = useState(LABEL.BGMUSIC);
-  const [cropData, setCropData] = useState();
-  const [downUrl, setDownUrl] = useState("");
+  const [currentTool, setCurrentTool] = useState(LABEL.TRIM);
   const [overMusic, setOverMusic] = useState(null);
+  const [cropDimensions, setCropDimensions] = useState();
+  const [origDimensions, setOrigDimensions] = useState({});
 
   useEffect(() => {
     ffmpeg.load().then(() => {
       setLoadingVisible(false);
     });
 
-    let links = JSON.parse(localStorage.getItem(BLOB_LINKS));
+    let links = JSON.parse(localStorage.getItem(LOCAL_STORAGE.BLOB_LINKS));
+
     links ? setLocalVideoLink(links) : setLocalVideoLink();
   }, []);
+
+  useEffect(() => {
+    if (localVideoLink) {
+      getVideoDimensions(localVideoLink)
+        .then(({ width, height }) => {
+          setOrigDimensions({ width: width, height: height });
+        })
+        .catch((error) => {
+          console.log(`Error occurred: ${error}`);
+        });
+    }
+  }, [localVideoLink]);
 
   const onSaveAndDownload = async () => {
     setLoadingVisible(true);
     let fileName = new Date().getTime();
+    let downUrl;
 
     switch (currentTool) {
       case LABEL.TRIM:
-        await trimModeDown(fileName);
+        downUrl = await trimModeDown(fileName);
         break;
       case LABEL.CROP:
-        await cropModeDown(fileName);
+        downUrl = await cropModeDown(fileName);
         break;
       case LABEL.BGMUSIC:
-        await musicOverModeDown(fileName);
+        downUrl = await musicOverModeDown(fileName);
         break;
     }
 
@@ -68,7 +83,7 @@ function EditMedia() {
       limitMaxTrimValue
     );
 
-    setDownUrl(url);
+    return url;
   };
 
   const cropModeDown = async (fileName) => {
@@ -76,13 +91,11 @@ function EditMedia() {
       ffmpeg,
       fileName,
       localVideoLink,
-      cropData.width,
-      cropData.height,
-      cropData.x,
-      cropData.y
+      cropDimensions,
+      origDimensions
     );
 
-    setDownUrl(url);
+    return url;
   };
 
   const musicOverModeDown = async (fileName) => {
@@ -93,7 +106,7 @@ function EditMedia() {
       overMusic
     );
 
-    setDownUrl(url);
+    return url;
   };
 
   return (
@@ -120,13 +133,15 @@ function EditMedia() {
           <VideoPlayer
             localVideoLink={localVideoLink}
             currentTool={currentTool}
-            cropData={cropData}
-            handleCropData={(value) => setCropData(value)}
+            handleCropDimensionsData={(value) => setCropDimensions(value)}
           />
 
           {currentTool === LABEL.TRIM && (
             <TrimSliderControl
               localVideoLink={localVideoLink}
+              outFormat={outFormat}
+              limitMinTrimValue={limitMinTrimValue}
+              limitMaxTrimValue={limitMaxTrimValue}
               handleLimitMinTrimValue={(value) => setlimitMinTrimValue(value)}
               handleLimitMaxTrimValue={(value) => setlimitMaxTrimValue(value)}
               handleOutFormat={(value) => setOutFormat(value)}

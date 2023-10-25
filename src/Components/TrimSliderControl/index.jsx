@@ -1,40 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { Slider, InputNumber, Select } from "antd";
 
-import { RECORDING_DURATION } from "../../utils/constants";
+import { LOCAL_STORAGE } from "../../utils/constants";
 
 const TrimSliderControl = (props) => {
   const {
     localVideoLink,
+    outFormat,
+    limitMinTrimValue,
+    limitMaxTrimValue,
     handleLimitMinTrimValue,
     handleLimitMaxTrimValue,
     handleOutFormat,
   } = props;
 
-  const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
-  const [limitMaxTrimValue, setlimitMaxTrimValue] = useState();
-  const [maxTrimValue, setMaxTrimValue] = useState("");
-  const [outFormat, setOutFormat] = useState("webm");
+  const [maxTrimValue, setMaxTrimValue] = useState();
 
   useEffect(() => {
     if (localVideoLink) {
       setMaxTrimValue(
-        Math.floor(localStorage.getItem(RECORDING_DURATION) / 1000)
+        Math.floor(
+          localStorage.getItem(LOCAL_STORAGE.RECORDING_DURATION) / 1000
+        )
       );
-      setlimitMaxTrimValue(
-        Math.floor(localStorage.getItem(RECORDING_DURATION) / 1000)
+      handleLimitMaxTrimValue(
+        Math.floor(
+          localStorage.getItem(LOCAL_STORAGE.RECORDING_DURATION) / 1000
+        )
       );
     } else {
-      setMaxTrimValue(0);
-      setlimitMaxTrimValue(0);
+      handleLimitMaxTrimValue(0);
     }
   }, [localVideoLink]);
-
-  useEffect(() => {
-    handleLimitMaxTrimValue(limitMaxTrimValue);
-    handleLimitMaxTrimValue(limitMaxTrimValue);
-    handleOutFormat(outFormat);
-  }, [limitMinTrimValue, limitMaxTrimValue, outFormat]);
 
   return (
     <div className="flex flex-col justify-center p-5">
@@ -44,20 +41,20 @@ const TrimSliderControl = (props) => {
             min={0}
             max={maxTrimValue}
             value={limitMinTrimValue}
-            onChange={(value) => setlimitMinTrimValue(value)}
+            onChange={(value) => handleLimitMinTrimValue(value)}
             className="mr-[10px]"
           />
           <InputNumber
             min={0}
             max={maxTrimValue}
             value={limitMaxTrimValue}
-            onChange={(value) => setlimitMaxTrimValue(value)}
+            onChange={(value) => handleLimitMaxTrimValue(value)}
           />
         </div>
         <Select
           defaultValue={outFormat}
           style={{ width: 100 }}
-          onChange={(value) => setOutFormat(value)}
+          onChange={(value) => handleOutFormat(value)}
           options={[
             { value: "webm", label: "WEBM" },
             { value: "mp4", label: "MP4" },
@@ -72,8 +69,8 @@ const TrimSliderControl = (props) => {
         value={[limitMinTrimValue, limitMaxTrimValue]}
         defaultValue={[limitMinTrimValue, limitMaxTrimValue]}
         onChange={(value) => {
-          setlimitMinTrimValue(value[0]);
-          setlimitMaxTrimValue(value[1]);
+          handleLimitMinTrimValue(value[0]);
+          handleLimitMaxTrimValue(value[1]);
         }}
       />
     </div>

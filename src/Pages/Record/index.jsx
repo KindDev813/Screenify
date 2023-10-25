@@ -7,12 +7,7 @@ import {
   VideoCameraOutlined,
   WindowsOutlined,
 } from "@ant-design/icons";
-import {
-  QUALITYOPTIONS,
-  LABEL,
-  BLOB_LINKS,
-  RECORDING_DURATION,
-} from "../../utils/constants";
+import { QUALITYOPTIONS, LABEL, LOCAL_STORAGE } from "../../utils/constants";
 
 import "./style.css";
 import WebcamDrag from "../../Components/WebcamDrag";
@@ -232,16 +227,14 @@ function Record() {
   const onSaveRecording = async () => {
     if (mediaRecorder) {
       mediaRecorder.stop();
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const blob = new Blob(recordedChunks, { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
 
-        localStorage.setItem("chunks", JSON.stringify(recordedChunks));
-
         recordingEndTime = new Date().getTime();
-        localStorage.setItem(BLOB_LINKS, JSON.stringify(url));
+        localStorage.setItem(LOCAL_STORAGE.BLOB_LINKS, JSON.stringify(url));
         localStorage.setItem(
-          RECORDING_DURATION,
+          LOCAL_STORAGE.RECORDING_DURATION,
           (recordingEndTime - recordingStartTime).toString()
         );
         navigate("/editMedia");
@@ -365,6 +358,7 @@ function Record() {
 
   return (
     <div className="grid grid-cols-7 p-7 h-screen gap-3 relative w-full">
+      {/* <div className="grid grid-cols-7 relative w-full"> */}
       <div className="col-span-7 flex flex-col my-auto">
         <div className="max-w-[600px] w-full border-[#111231] border-2 rounded-lg p-10 mx-auto">
           {/* Mode of recording */}
