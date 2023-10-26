@@ -54,10 +54,22 @@ const VideoPlayer = (props) => {
           crop={cropData}
           onChange={(value) => handleAbsoluteData(value)}
         >
-          <video id="crop_blob_video" controls autoPlay src={localVideoLink} />
+          <video
+            id="crop_blob_video"
+            controls
+            autoPlay
+            src={localVideoLink}
+            className="w-[100%] h-auto"
+          />
         </ReactCrop>
       ) : (
-        <video id="blob_video" controls autoPlay src={localVideoLink} />
+        <video
+          id="blob_video"
+          controls
+          autoPlay
+          src={localVideoLink}
+          className="w-[100%] h-auto"
+        />
       )}
     </div>
   );
