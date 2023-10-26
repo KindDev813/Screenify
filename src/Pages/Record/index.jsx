@@ -16,6 +16,9 @@ import LabelSelect from "../../Components/LabelSelect";
 import AnnotationTool from "../../Components/AnnotationTool";
 
 let mediaRecorder,
+  stream,
+  screenStream,
+  microphoneStream,
   recordingStartTime,
   recordingEndTime = null;
 
@@ -59,8 +62,6 @@ function Record() {
   const [recordedChunks, setRecordedChunks] = useState([]); // Recorded chunks
   const [microphoneOptions, setMicrophoneOptions] = useState([]); // Microphone source list
   const [cameraOptions, setCameraOptions] = useState([]); // Camera source list
-
-  const [stream, setStream] = useState(null);
 
   // Get camera & audio device
   useEffect(() => {
@@ -154,7 +155,7 @@ function Record() {
         if (cameraSource === "Disabled") {
           alertModal("Please enable your camera(microphone)!");
         } else {
-          let stream_1 = await navigator.mediaDevices.getUserMedia({
+          let onlyCameraStream = await navigator.mediaDevices.getUserMedia({
             video: {
               deviceId: cameraSource ? cameraSource : undefined,
             },
@@ -165,8 +166,7 @@ function Record() {
               : false,
           });
 
-          setStream(stream_1);
-
+          stream = onlyCameraStream;
           setVisibleTimeCounterModal(true);
         }
       } else {
@@ -174,7 +174,7 @@ function Record() {
         let audioIn_01, audioIn_02;
         let dest = audioContext.createMediaStreamDestination();
 
-        let screenStream = await navigator.mediaDevices.getDisplayMedia({
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: {
             displaySurface:
               recordingMode === 0
@@ -197,7 +197,7 @@ function Record() {
         }
 
         if (microphoneSource !== "Disabled") {
-          let microphoneStream = await navigator.mediaDevices.getUserMedia({
+          microphoneStream = await navigator.mediaDevices.getUserMedia({
             audio: { deviceId: microphoneSource },
           });
 
@@ -215,7 +215,7 @@ function Record() {
         mergedMediaStream.addTrack(screenStream.getVideoTracks()[0]);
         mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
 
-        setStream(mergedMediaStream);
+        stream = mergedMediaStream;
         setVisibleTimeCounterModal(true);
       }
     } catch (error) {
@@ -242,6 +242,16 @@ function Record() {
         stream.getTracks().forEach((element) => {
           element.stop();
         });
+
+        screenStream.getTracks().forEach((track) => {
+          track.stop();
+        });
+
+        microphoneStream.getTracks().forEach((track) => {
+          track.stop();
+        });
+
+        URL.revokeObjectURL(localVideoLink);
       };
     }
 
@@ -282,7 +292,7 @@ function Record() {
         };
       })
       .catch((error) => {
-        console.log(error);
+        console.log("Something went wrong!", error);
       });
   };
 

@@ -4,7 +4,6 @@ import { createFFmpeg } from "@ffmpeg/ffmpeg";
 
 import { LOCAL_STORAGE, LABEL } from "../../utils/constants";
 import TrimSliderControl from "../../Components/TrimSliderControl";
-// import CropControl from "../../Components/CropControl";
 import BgMusicOverControl from "../../Components/BgMusicOverControl";
 import VideoPlayer from "../../Components/VideoPlayer";
 import EditToolMenu from "../../Components/EditToolMenu";
@@ -72,6 +71,7 @@ function EditMedia() {
     a.download = `${fileName}.${outFormat}`;
     setLoadingVisible(false);
     a.click();
+    URL.revokeObjectURL(localVideoLink);
   };
 
   const trimModeDown = async (fileName) => {
