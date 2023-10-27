@@ -66,13 +66,30 @@ function Record() {
   // Get camera & audio device
   useEffect(() => {
     const getDeviceName = async () => {
-      await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      try {
-        await checkPermissionAllowed("camera");
-        await checkPermissionAllowed("microphone");
-      } catch (error) {
-        console.error("Error getting camera device name:", error);
-      }
+      // await navigator.mediaDevices.getUserMedia({ audio: true });
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(function (stream) {
+          if (stream.getVideoTracks().length > 0) {
+            setCameraAllowed(true);
+            onGetDeviceSouce();
+          }
+        })
+        .catch(function (error) {
+          // code for when there is an error
+        });
+
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then(function (stream) {
+          if (stream.getAudioTracks().length > 0) {
+            setMicrophoneAllowed(true);
+            onGetDeviceSouce();
+          }
+        })
+        .catch(function (error) {
+          // code for when there is an error
+        });
     };
 
     getDeviceName();
@@ -243,15 +260,13 @@ function Record() {
           element.stop();
         });
 
-        screenStream.getTracks().forEach((track) => {
+        screenStream?.getTracks().forEach((track) => {
           track.stop();
         });
 
-        microphoneStream.getTracks().forEach((track) => {
+        microphoneStream?.getTracks().forEach((track) => {
           track.stop();
         });
-
-        URL.revokeObjectURL(localVideoLink);
       };
     }
 
@@ -276,24 +291,6 @@ function Record() {
       mimeType: "video/webm;codecs=h264,opus",
       videoBitsPerSecond: Number(qualityDefaultValue),
     });
-  };
-
-  // Checking device permission
-  const checkPermissionAllowed = async (device) => {
-    const descriptor = { name: device };
-
-    await navigator.permissions
-      .query(descriptor)
-      .then((result) => {
-        onVisibleDeviceSelect(device, result.state);
-
-        result.onchange = function () {
-          onVisibleDeviceSelect(device, result.state);
-        };
-      })
-      .catch((error) => {
-        console.log("Something went wrong!", error);
-      });
   };
 
   // Getting camera & microphone source
@@ -329,21 +326,6 @@ function Record() {
         ...microphoneOptions,
         "No microphone device found",
       ]);
-    }
-  };
-
-  // Camera & Microphone souce enable/disable
-  const onVisibleDeviceSelect = (deviceName, state) => {
-    if (state === "granted") {
-      deviceName === "camera"
-        ? setCameraAllowed(true)
-        : setMicrophoneAllowed(true);
-
-      onGetDeviceSouce();
-    } else {
-      deviceName === "camera"
-        ? setCameraAllowed(false)
-        : setMicrophoneAllowed(false);
     }
   };
 

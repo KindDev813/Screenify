@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Spin, Button } from "antd";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 
@@ -12,11 +12,14 @@ import {
   cropVideoFFmpeg,
   musicOverFFmpeg,
   getVideoDimensions,
+  // saveBufferOriginalVideo,
+  // getLinkOriginalVideo,
 } from "../../utils/functions";
 
 const ffmpeg = createFFmpeg({ log: false });
 
 function EditMedia() {
+  const originalVideo = useRef();
   const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
   const [limitMaxTrimValue, setlimitMaxTrimValue] = useState();
   const [localVideoLink, setLocalVideoLink] = useState("");
@@ -33,12 +36,18 @@ function EditMedia() {
     });
 
     let links = JSON.parse(localStorage.getItem(LOCAL_STORAGE.BLOB_LINKS));
-
     links ? setLocalVideoLink(links) : setLocalVideoLink();
   }, []);
 
   useEffect(() => {
     if (localVideoLink) {
+      // let fileName = new Date().getTime();
+      // if (loadingVisible === false)
+      //   originalVideo.current = saveBufferOriginalVideo(
+      //     ffmpeg,
+      //     localVideoLink,
+      //     fileName
+      //   );
       getVideoDimensions(localVideoLink)
         .then(({ width, height }) => {
           setOrigDimensions({ width: width, height: height });
@@ -47,7 +56,7 @@ function EditMedia() {
           console.log(`Error occurred: ${error}`);
         });
     }
-  }, [localVideoLink]);
+  }, [localVideoLink, loadingVisible]);
 
   const onSaveAndDownload = async () => {
     setLoadingVisible(true);
@@ -75,6 +84,7 @@ function EditMedia() {
   };
 
   const trimModeDown = async (fileName) => {
+    // let origLink = await getLinkOriginalVideo(originalVideo.current);
     let url = await trimVideoFFmpeg(
       ffmpeg,
       fileName,
@@ -87,6 +97,7 @@ function EditMedia() {
   };
 
   const cropModeDown = async (fileName) => {
+    // let origLink = await getLinkOriginalVideo(originalVideo.current);
     let url = await cropVideoFFmpeg(
       ffmpeg,
       fileName,
@@ -99,6 +110,7 @@ function EditMedia() {
   };
 
   const musicOverModeDown = async (fileName) => {
+    // let origLink = await getLinkOriginalVideo(originalVideo.current);
     let url = await musicOverFFmpeg(
       ffmpeg,
       fileName,

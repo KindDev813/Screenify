@@ -22,8 +22,8 @@ const VideoPlayer = (props) => {
   useEffect(() => {
     const updateVideoDimensions = () => {
       setVideoTagDimensions({
-        width: document.getElementById("crop_blob_video").clientWidth,
-        height: document.getElementById("crop_blob_video").clientHeight,
+        width: document.getElementById("crop_blob_video")?.clientWidth,
+        height: document.getElementById("crop_blob_video")?.clientHeight,
       });
     };
 
