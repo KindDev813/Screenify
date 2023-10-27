@@ -89,6 +89,7 @@ export const ANNOTATION_TOOL_SELECTION = {
   FREE_HAND: "free_hand",
   IS_SELETED: "is_selected",
   UNDO: "undo",
+  IS_NOT_SELECTED: "is_not_selected",
 };
 
 export const CANVAS_WIDTH = window.innerWidth;

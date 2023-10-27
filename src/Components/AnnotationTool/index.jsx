@@ -28,7 +28,9 @@ const AnnotationTool = (props) => {
   const [switchDropEditMenu, setSwitchDropEditMenu] = useState(false); // After pressing pause button
   const [visibleVolumeTrack, setVisibleVolumeTrack] = useState(true); // enable/disable audio track
   const [visibleMicrophoneTrack, setVisibleMicrophoneTrack] = useState(true); // enable/disable microphone track
-  const [currentSelectedOption, setCurrentSelectedOption] = useState(); // Now, this is the option you selected. 0: Delete, 1: TextEditor, 2: Rect, 3: Ellipse, 4: Triangle, 5: FreeHand 6: Seleted, 7:Undo
+  const [currentSelectedOption, setCurrentSelectedOption] = useState(
+    ANNOTATION_TOOL_SELECTION.IS_NOT_SELECTED
+  ); // Now, this is the option you selected. 0: Delete, 1: TextEditor, 2: Rect, 3: Ellipse, 4: Triangle, 5: FreeHand 6: Seleted, 7:Undo
   const [nowColor, setNowColor] = useState("#ff0000"); // Setted color by Color Picker
   const [nowSize, setNowSize] = useState(10); // Setted size by pencil scroll
   const [annotationToolsOpen, setAnnotationToolsOpen] = useState(false);

@@ -60,8 +60,10 @@ const AnnotationPlayField = (props) => {
 
       canvas.loadFromJSON(canvasState[currentStateIndex - 1], () => {
         canvas.renderAll();
-        setCurrentStateIndex((prevState) => prevState - 1);
+        setCurrentStateIndex(currentStateIndex - 1);
       });
+
+      handleCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.IS_NOT_SELECTED);
     }
   }, [currentSelectedOption, canvas]);
 
@@ -81,7 +83,7 @@ const AnnotationPlayField = (props) => {
     }
 
     setCanvasState((prevState) => [...prevState, canvasAsJson]);
-    setCurrentStateIndex(canvasState.length);
+    setCurrentStateIndex(canvas.getObjects().length);
   };
 
   return (
