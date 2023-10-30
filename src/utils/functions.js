@@ -1,20 +1,6 @@
 import React from "react";
 import { fetchFile } from "@ffmpeg/ffmpeg";
 
-// export const saveBufferOriginalVideo = async (ffmpeg, link, fileName) => {
-//   ffmpeg.FS("writeFile", `${fileName}.mp4`, await fetchFile(link));
-//   return ffmpeg.FS("readFile", `${fileName}.mp4`);
-// };
-
-// export const getLinkOriginalVideo = async (originalVideo) => {
-//   console.log(originalVideo);
-//   const origLink = URL.createObjectURL(
-//     new Blob([originalVideo.buffer], { type: "video/mp4" })
-//   );
-
-//   return origLink;
-// };
-
 export const trimVideoFFmpeg = async (
   ffmpeg,
   fileName,

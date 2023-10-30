@@ -66,7 +66,6 @@ function Record() {
   // Get camera & audio device
   useEffect(() => {
     const getDeviceName = async () => {
-      // await navigator.mediaDevices.getUserMedia({ audio: true });
       navigator.mediaDevices
         .getUserMedia({ video: true })
         .then(function (stream) {

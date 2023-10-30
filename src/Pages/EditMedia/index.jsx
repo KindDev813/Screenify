@@ -12,8 +12,6 @@ import {
   cropVideoFFmpeg,
   musicOverFFmpeg,
   getVideoDimensions,
-  // saveBufferOriginalVideo,
-  // getLinkOriginalVideo,
 } from "../../utils/functions";
 
 const ffmpeg = createFFmpeg({ log: false });
@@ -41,13 +39,6 @@ function EditMedia() {
 
   useEffect(() => {
     if (localVideoLink) {
-      // let fileName = new Date().getTime();
-      // if (loadingVisible === false)
-      //   originalVideo.current = saveBufferOriginalVideo(
-      //     ffmpeg,
-      //     localVideoLink,
-      //     fileName
-      //   );
       getVideoDimensions(localVideoLink)
         .then(({ width, height }) => {
           setOrigDimensions({ width: width, height: height });
@@ -80,11 +71,9 @@ function EditMedia() {
     a.download = `${fileName}.${outFormat}`;
     setLoadingVisible(false);
     a.click();
-    URL.revokeObjectURL(localVideoLink);
   };
 
   const trimModeDown = async (fileName) => {
-    // let origLink = await getLinkOriginalVideo(originalVideo.current);
     let url = await trimVideoFFmpeg(
       ffmpeg,
       fileName,
@@ -97,7 +86,6 @@ function EditMedia() {
   };
 
   const cropModeDown = async (fileName) => {
-    // let origLink = await getLinkOriginalVideo(originalVideo.current);
     let url = await cropVideoFFmpeg(
       ffmpeg,
       fileName,
@@ -110,7 +98,6 @@ function EditMedia() {
   };
 
   const musicOverModeDown = async (fileName) => {
-    // let origLink = await getLinkOriginalVideo(originalVideo.current);
     let url = await musicOverFFmpeg(
       ffmpeg,
       fileName,
