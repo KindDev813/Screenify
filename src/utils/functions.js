@@ -1,4 +1,5 @@
 import React from "react";
+import { Modal } from "antd";
 import { fetchFile } from "@ffmpeg/ffmpeg";
 
 export const trimVideoFFmpeg = async (
@@ -9,7 +10,11 @@ export const trimVideoFFmpeg = async (
   maxTime
 ) => {
   try {
-    ffmpeg.FS("writeFile", `input_${fileName}.mp4`, await fetchFile(link));
+    await ffmpeg.FS(
+      "writeFile",
+      `input_${fileName}.mp4`,
+      await fetchFile(link)
+    );
     await ffmpeg.run(
       "-i",
       `input_${fileName}.mp4`,
@@ -17,8 +22,8 @@ export const trimVideoFFmpeg = async (
       `${minTime}`,
       "-to",
       `${maxTime}`,
-      "-r",
-      "24",
+      "-preset",
+      "ultrafast",
       "-f",
       "mp4",
       `output_${fileName}.mp4`
@@ -47,14 +52,19 @@ export const cropVideoFFmpeg = async (
   let Y = cropDimensions.y * origDimensions.height;
 
   try {
-    ffmpeg.FS("writeFile", `input_${fileName}.mp4`, await fetchFile(link));
+    await ffmpeg.FS(
+      "writeFile",
+      `input_${fileName}.mp4`,
+      await fetchFile(link)
+    );
+
     await ffmpeg.run(
       "-i",
       `input_${fileName}.mp4`,
       "-filter:v",
       `crop=${width}:${height}:${X}:${Y}`,
-      "-r",
-      "24",
+      "-preset",
+      "ultrafast",
       "-f",
       "mp4",
       `output_${fileName}.mp4`
@@ -72,8 +82,12 @@ export const cropVideoFFmpeg = async (
 
 export const musicOverFFmpeg = async (ffmpeg, fileName, link, overMusic) => {
   try {
-    ffmpeg.FS("writeFile", `input_${fileName}.mp4`, await fetchFile(link));
-    ffmpeg.FS(
+    await ffmpeg.FS(
+      "writeFile",
+      `input_${fileName}.mp4`,
+      await fetchFile(link)
+    );
+    await ffmpeg.FS(
       "writeFile",
       `input_music_${fileName}.mp3`,
       await fetchFile(overMusic)
@@ -91,6 +105,8 @@ export const musicOverFFmpeg = async (ffmpeg, fileName, link, overMusic) => {
       "-map",
       "0:v",
       "-shortest",
+      "-preset",
+      "ultrafast",
       `output_${fileName}.mp4`
     );
 
@@ -129,5 +145,11 @@ export const getVideoDimensions = async (blobUrl) => {
     );
     videoElem.src = blobUrl;
     videoElem.load();
+  });
+};
+
+export const alertModal = (value) => {
+  Modal.error({
+    title: value,
   });
 };

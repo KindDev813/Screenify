@@ -8,6 +8,7 @@ import {
   WindowsOutlined,
 } from "@ant-design/icons";
 import { QUALITYOPTIONS, LABEL, LOCAL_STORAGE } from "../../utils/constants";
+import { alertModal } from "../../utils/functions";
 
 import "./style.css";
 import WebcamDrag from "../../Components/WebcamDrag";
@@ -67,20 +68,13 @@ function Record() {
   useEffect(() => {
     const getDeviceName = async () => {
       navigator.mediaDevices
-        .getUserMedia({ video: true })
+        .getUserMedia({ video: true, audio: true })
         .then(function (stream) {
           if (stream.getVideoTracks().length > 0) {
             setCameraAllowed(true);
             onGetDeviceSouce();
           }
-        })
-        .catch(function (error) {
-          // code for when there is an error
-        });
 
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then(function (stream) {
           if (stream.getAudioTracks().length > 0) {
             setMicrophoneAllowed(true);
             onGetDeviceSouce();
@@ -89,6 +83,18 @@ function Record() {
         .catch(function (error) {
           // code for when there is an error
         });
+
+      // navigator.mediaDevices
+      //   .getUserMedia({ audio: true })
+      //   .then(function (stream) {
+      //     if (stream.getAudioTracks().length > 0) {
+      //       setMicrophoneAllowed(true);
+      //       onGetDeviceSouce();
+      //     }
+      //   })
+      //   .catch(function (error) {
+      //     // code for when there is an error
+      //   });
     };
 
     getDeviceName();
@@ -340,18 +346,11 @@ function Record() {
       : setMicrophoneSource(value);
   };
 
-  // Error modal when disable the camera source
-  const alertModal = (value) => {
-    Modal.error({
-      title: value,
-    });
-  };
-
   return (
     <div className="grid grid-cols-7 p-7 h-screen gap-3 relative w-full">
       {/* <div className="grid grid-cols-7 relative w-full"> */}
       <div className="col-span-7 flex flex-col my-auto">
-        <div className="max-w-[600px] w-full border-[#111231] border-2 rounded-lg p-10 mx-auto">
+        <div className="max-w-[600px] w-full border-[#a1a0a0] border-2 rounded-lg p-10 mx-auto">
           {/* Mode of recording */}
           <Radio.Group
             value={recordingMode}

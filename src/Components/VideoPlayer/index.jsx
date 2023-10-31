@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
@@ -6,45 +6,20 @@ import { LABEL } from "../../utils/constants";
 
 const VideoPlayer = (props) => {
   const { localVideoLink, currentTool, handleCropDimensionsData } = props;
-
-  const [videoTagDimensions, setVideoTagDimensions] = useState();
   const [cropData, setCropData] = useState();
-
-  useEffect(() => {
-    if (currentTool === LABEL.CROP) {
-      setVideoTagDimensions({
-        width: document.getElementById("crop_blob_video")?.clientWidth,
-        height: document.getElementById("crop_blob_video")?.clientHeight,
-      });
-    }
-  }, [currentTool]);
-
-  useEffect(() => {
-    const updateVideoDimensions = () => {
-      setVideoTagDimensions({
-        width: document.getElementById("crop_blob_video")?.clientWidth,
-        height: document.getElementById("crop_blob_video")?.clientHeight,
-      });
-    };
-
-    window.addEventListener("resize", updateVideoDimensions);
-
-    return () => window.removeEventListener("resize", updateVideoDimensions);
-  }, []);
-
-  useEffect(() => {}, [videoTagDimensions]);
 
   const handleAbsoluteData = (value) => {
     setCropData(value);
 
-    if (videoTagDimensions) {
-      handleCropDimensionsData({
-        width: value.width / videoTagDimensions.width,
-        height: value.height / videoTagDimensions.width,
-        x: value.x / videoTagDimensions.width,
-        y: value.y / videoTagDimensions.width,
-      });
-    }
+    let width = document.getElementById("blob_video")?.clientWidth;
+    let height = document.getElementById("blob_video")?.clientHeight;
+
+    handleCropDimensionsData({
+      width: value.width / width,
+      height: value.height / height,
+      x: value.x / width,
+      y: value.y / height,
+    });
   };
 
   return (
@@ -55,9 +30,9 @@ const VideoPlayer = (props) => {
           onChange={(value) => handleAbsoluteData(value)}
         >
           <video
-            id="crop_blob_video"
-            controls
+            id="blob_video"
             autoPlay
+            controls
             src={localVideoLink}
             className="w-[100%] h-auto"
           />
@@ -65,8 +40,8 @@ const VideoPlayer = (props) => {
       ) : (
         <video
           id="blob_video"
-          controls
           autoPlay
+          controls
           src={localVideoLink}
           className="w-[100%] h-auto"
         />
