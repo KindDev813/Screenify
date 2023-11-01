@@ -26,19 +26,19 @@ import bg_output5 from "../../utils/screenshot/output5.jpg";
 import bg_output6 from "../../utils/screenshot/output6.jpg";
 import bg_output7 from "../../utils/screenshot/output7.jpg";
 
-const ffmpeg = createFFmpeg({ log: true });
+const ffmpeg = createFFmpeg({ log: false });
 
 function EditMedia() {
   const navigate = useNavigate();
   const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
-  const [limitMaxTrimValue, setlimitMaxTrimValue] = useState();
+  const [limitMaxTrimValue, setlimitMaxTrimValue] = useState(100);
   const [localVideoLink, setLocalVideoLink] = useState("");
   const [loadingVisible, setLoadingVisible] = useState(true);
   const [currentTool, setCurrentTool] = useState(LABEL.TRIM);
   const [overMusic, setOverMusic] = useState(null);
   const [cropDimensions, setCropDimensions] = useState();
   const [origDimensions, setOrigDimensions] = useState({});
-  const [selectedInterval, setSelectedInterval] = useState([0, 2]);
+  const [maxTime, setMaxTime] = useState();
   const timeRangeBackgroundImages = [
     bg_output0,
     bg_output1,
@@ -110,8 +110,8 @@ function EditMedia() {
       ffmpeg,
       fileName,
       localVideoLink,
-      limitMinTrimValue,
-      limitMaxTrimValue
+      (maxTime / 100) * limitMinTrimValue,
+      (maxTime / 100) * limitMaxTrimValue
     );
 
     return url;
@@ -157,7 +157,7 @@ function EditMedia() {
                 onBack();
               }}
             >
-              BACK
+              Back
             </Button>
 
             <Button
@@ -167,7 +167,7 @@ function EditMedia() {
                 onSaveAndDownload();
               }}
             >
-              Done!
+              Done
             </Button>
           </div>
 
@@ -181,12 +181,16 @@ function EditMedia() {
             <TimeRange
               error={false}
               ticksNumber={20}
+              localVideoLink={localVideoLink}
               backgroundImages={timeRangeBackgroundImages}
-              selectedInterval={selectedInterval}
-              timelineInterval={[0, 20]}
-              onUpdateCallback={() => {}}
-              onChangeCallback={(value) => setSelectedInterval(value)}
-              step={1000 * 60}
+              selectedInterval={[0, 100]}
+              onUpdateCallback={(value) => {
+                setlimitMinTrimValue(value[0]);
+                setlimitMaxTrimValue(value[1]);
+              }}
+              maxTime={maxTime}
+              handleMaxTime={(value) => setMaxTime(value)}
+              step={100 / maxTime}
             />
           )}
           {/* {currentTool === LABEL.TRIM && (

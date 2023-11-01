@@ -1,25 +1,20 @@
-import PropTypes from "prop-types";
 import React from "react";
 
-const getTrackConfig = ({ error, source, target, disabled }) => {
+const getTrackConfig = ({ error, source, target }) => {
   const basicStyle = {
     left: `${source.percent}%`,
     width: `calc(${target.percent - source.percent}% - 1px)`,
   };
 
-  if (disabled) return basicStyle;
-
   return { ...basicStyle };
 };
 
-const Track = ({ error, source, target, getTrackProps, disabled }) => {
-  console.log(source);
-  console.log(target);
+const Track = ({ error, source, target, getTrackProps }) => {
   return (
     <>
       <div
         className="react_time_range__track"
-        style={getTrackConfig({ error, source, target, disabled })}
+        style={getTrackConfig({ error, source, target })}
         {...getTrackProps()}
       />
     </>
