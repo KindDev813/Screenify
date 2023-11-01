@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Radio, Modal } from "antd";
 import {
@@ -8,7 +8,7 @@ import {
   WindowsOutlined,
 } from "@ant-design/icons";
 import { QUALITYOPTIONS, LABEL, LOCAL_STORAGE } from "../../utils/constants";
-import { alertModal } from "../../utils/functions";
+import { alertModal, isEmpty } from "../../utils/functions";
 
 import "./style.css";
 import WebcamDrag from "../../Components/WebcamDrag";
@@ -22,6 +22,9 @@ let mediaRecorder,
   microphoneStream,
   recordingStartTime,
   recordingEndTime = null;
+
+let cameraDeviceCounter = 0;
+let micDeviceCounter = 0;
 
 // Recording mode labels & icons
 const modeLabels = [
@@ -63,42 +66,90 @@ function Record() {
   const [recordedChunks, setRecordedChunks] = useState([]); // Recorded chunks
   const [microphoneOptions, setMicrophoneOptions] = useState([]); // Microphone source list
   const [cameraOptions, setCameraOptions] = useState([]); // Camera source list
-
+  const [audioDeviceExisting, setAudioDeviceExisting] = useState(false);
+  const [videoDeviceExisting, setVideoDeviceExisting] = useState(false);
   // Get camera & audio device
   useEffect(() => {
     const getDeviceName = async () => {
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: true })
-        .then(function (stream) {
-          if (stream.getVideoTracks().length > 0) {
-            setCameraAllowed(true);
-            onGetDeviceSouce();
+      let audioDevices = [],
+        videoDevices = [];
+      await navigator.mediaDevices.enumerateDevices().then(async (devices) => {
+        devices.forEach((device) => {
+          if (device.kind === "videoinput") {
+            cameraDeviceCounter++;
+            videoDevices.push(device);
           }
 
-          if (stream.getAudioTracks().length > 0) {
-            setMicrophoneAllowed(true);
-            onGetDeviceSouce();
+          if (device.kind === "audioinput") {
+            micDeviceCounter++;
+            audioDevices.push(device);
           }
-        })
-        .catch(function (error) {
-          // code for when there is an error
         });
+        await onGetDeviceSource(audioDevices, videoDevices);
+      });
 
-      // navigator.mediaDevices
-      //   .getUserMedia({ audio: true })
-      //   .then(function (stream) {
-      //     if (stream.getAudioTracks().length > 0) {
-      //       setMicrophoneAllowed(true);
-      //       onGetDeviceSouce();
-      //     }
-      //   })
-      //   .catch(function (error) {
-      //     // code for when there is an error
-      //   });
+      if (cameraDeviceCounter !== 0 && micDeviceCounter !== 0) {
+        await navigator.mediaDevices
+          .getUserMedia({ video: true, audio: true })
+          .then((stream) => {
+            console.log("You can use Audio and Video device");
+          })
+          .catch((err) => {
+            console.log("You can not use Audio and Video device");
+          });
+        setVideoDeviceExisting(true);
+        setAudioDeviceExisting(true);
+      } else {
+        if (cameraDeviceCounter !== 0) {
+          await navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then((stream) => {
+              console.log("You can use Video device");
+            })
+            .catch((err) => {
+              console.log("You can not use Video device");
+            });
+          setVideoDeviceExisting(true);
+        }
+
+        if (micDeviceCounter !== 0) {
+          await navigator.mediaDevices
+            .getUserMedia({ audio: true })
+            .then((stream) => {
+              console.log("You can use Audio device");
+            })
+            .catch((err) => {
+              console.log("You can not use Audio device");
+            });
+          setAudioDeviceExisting(true);
+        }
+      }
     };
 
     getDeviceName();
   }, []);
+
+  useEffect(() => {
+    if (videoDeviceExisting) {
+      navigator.permissions.query({ name: "camera" }).then((res) => {
+        if (res.state == "granted") {
+          setCameraAllowed(true);
+        } else {
+          setCameraAllowed(false);
+        }
+      });
+    }
+
+    if (audioDeviceExisting) {
+      navigator.permissions.query({ name: "microphone" }).then((res) => {
+        if (res.state == "granted") {
+          setMicrophoneAllowed(true);
+        } else {
+          setMicrophoneAllowed(false);
+        }
+      });
+    }
+  }, [audioDeviceExisting, videoDeviceExisting]);
 
   // Time counter
   useEffect(() => {
@@ -299,17 +350,8 @@ function Record() {
   };
 
   // Getting camera & microphone source
-  const onGetDeviceSouce = async () => {
-    const mediaDevices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = mediaDevices.filter(
-      (device) => device.kind === "videoinput"
-    );
-
-    const audioDevices = mediaDevices.filter(
-      (device) => device.kind === "audioinput"
-    );
-
-    if (videoDevices.length > 0) {
+  const onGetDeviceSource = async (audioDevices, videoDevices) => {
+    if (!isEmpty(videoDevices)) {
       let temp = videoDevices.map((videoDevice) => {
         return { label: videoDevice.label, value: videoDevice.deviceId };
       });
@@ -317,20 +359,17 @@ function Record() {
       temp.unshift({ label: "Disabled", value: "Disabled" });
       setCameraOptions(temp);
     } else {
-      setCameraOptions([...cameraOptions, "No camera device found"]);
+      setCameraOptions([{ label: "Disabled", value: "Disabled" }]);
     }
 
-    if (audioDevices.length > 0) {
+    if (!isEmpty(audioDevices)) {
       let temp = audioDevices.map((audioDevice) => {
         return { label: audioDevice.label, value: audioDevice.deviceId };
       });
       temp.unshift({ label: "Disabled", value: "Disabled" });
       setMicrophoneOptions(temp);
     } else {
-      setMicrophoneOptions([
-        ...microphoneOptions,
-        "No microphone device found",
-      ]);
+      setMicrophoneOptions([{ label: "Disabled", value: "Disabled" }]);
     }
   };
 
@@ -348,7 +387,6 @@ function Record() {
 
   return (
     <div className="grid grid-cols-7 p-7 h-screen gap-3 relative w-full">
-      {/* <div className="grid grid-cols-7 relative w-full"> */}
       <div className="col-span-7 flex flex-col my-auto">
         <div className="max-w-[600px] w-full border-[#a1a0a0] border-2 rounded-lg p-10 mx-auto">
           {/* Mode of recording */}
