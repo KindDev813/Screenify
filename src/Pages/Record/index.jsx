@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Radio } from "antd";
 import {
@@ -16,15 +16,15 @@ import TimeCounterModal from "../../Components/TimeCounterModal";
 import LabelSelect from "../../Components/LabelSelect";
 import AnnotationTool from "../../Components/AnnotationTool";
 
-let mediaRecorder,
-  stream,
-  screenStream,
-  microphoneStream,
-  recordingStartTime,
+let mediaRecorder = null,
+  stream = null,
+  screenStream = null,
+  microphoneStream = null,
+  recordingStartTime = null,
   recordingEndTime = null;
 
-let cameraDeviceCounter = 0;
-let micDeviceCounter = 0;
+let cameraDeviceCounter = 0,
+  micDeviceCounter = 0;
 
 // Recording mode labels & icons
 const modeLabels = [
@@ -190,7 +190,7 @@ function Record() {
       mediaRecorder.ondataavailable = (e) => {
         let temp = recordedChunks;
         temp.push(e.data);
-        setRecordedChunks(e.data);
+        setRecordedChunks(temp);
       };
 
       mediaRecorder.start();

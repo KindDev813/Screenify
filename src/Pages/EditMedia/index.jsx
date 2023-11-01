@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Spin, Button } from "antd";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
-import { endOfToday, set } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 import { LOCAL_STORAGE, LABEL } from "../../utils/constants";
 import TrimSliderControl from "../../Components/TrimSliderControl";
@@ -29,6 +29,7 @@ import bg_output7 from "../../utils/screenshot/output7.jpg";
 const ffmpeg = createFFmpeg({ log: true });
 
 function EditMedia() {
+  const navigate = useNavigate();
   const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
   const [limitMaxTrimValue, setlimitMaxTrimValue] = useState();
   const [localVideoLink, setLocalVideoLink] = useState("");
@@ -99,6 +100,11 @@ function EditMedia() {
     a.click();
   };
 
+  const onBack = () => {
+    URL.revokeObjectURL(localVideoLink);
+    navigate("/");
+  };
+
   const trimModeDown = async (fileName) => {
     let url = await trimVideoFFmpeg(
       ffmpeg,
@@ -143,7 +149,17 @@ function EditMedia() {
         />
 
         <div className="col-span-6 flex flex-col justify-evenly h-full my-auto p-4 border-2 border-[#00000057] rounded-lg">
-          <div className="flex justify-end p-4">
+          <div className="flex justify-between p-4">
+            <Button
+              type="primary"
+              shape="round"
+              onClick={() => {
+                onBack();
+              }}
+            >
+              BACK
+            </Button>
+
             <Button
               type="primary"
               shape="round"
