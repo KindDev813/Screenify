@@ -13,6 +13,7 @@ import {
   trimVideoFFmpeg,
   cropVideoFFmpeg,
   musicOverFFmpeg,
+  extractImagesFFmpeg,
   getVideoDimensions,
   alertModal,
 } from "../../utils/functions";
@@ -38,8 +39,8 @@ function EditMedia() {
   const [overMusic, setOverMusic] = useState(null);
   const [cropDimensions, setCropDimensions] = useState();
   const [origDimensions, setOrigDimensions] = useState({});
-  const [maxTime, setMaxTime] = useState();
-  const timeRangeBackgroundImages = [
+  const [maxTime, setMaxTime] = useState([]);
+  const [timeRangeBgImages, setTimeRangeBgImages] = useState([
     bg_output0,
     bg_output1,
     bg_output2,
@@ -48,7 +49,7 @@ function EditMedia() {
     bg_output5,
     bg_output6,
     bg_output7,
-  ];
+  ]);
 
   useEffect(() => {
     ffmpeg
@@ -57,7 +58,7 @@ function EditMedia() {
         setLoadingVisible(false);
       })
       .catch((error) => {
-        alertModal("Please reload editting page!");
+        alertModal("Please reload the editting page!");
       });
 
     let links = JSON.parse(localStorage.getItem(LOCAL_STORAGE.BLOB_LINKS));
@@ -74,6 +75,24 @@ function EditMedia() {
           console.log(`Error occurred: ${error}`);
         });
     }
+  }, [localVideoLink]);
+
+  useEffect(() => {
+    const getImages = async () => {
+      if (localVideoLink && !loadingVisible) {
+        let fileName = new Date().getTime();
+        let imageLinks = await extractImagesFFmpeg(
+          ffmpeg,
+          localVideoLink,
+          maxTime,
+          fileName
+        );
+        setTimeRangeBgImages(imageLinks);
+        setLoadingVisible(false);
+      }
+    };
+
+    getImages();
   }, [localVideoLink, loadingVisible]);
 
   const onSaveAndDownload = async () => {
@@ -174,6 +193,8 @@ function EditMedia() {
           <VideoPlayer
             localVideoLink={localVideoLink}
             currentTool={currentTool}
+            limitMinTrimValue={(maxTime / 100) * limitMinTrimValue}
+            limitMaxTrimValue={(maxTime / 100) * limitMaxTrimValue}
             handleCropDimensionsData={(value) => setCropDimensions(value)}
           />
 
@@ -182,7 +203,7 @@ function EditMedia() {
               error={false}
               ticksNumber={20}
               localVideoLink={localVideoLink}
-              backgroundImages={timeRangeBackgroundImages}
+              backgroundImages={timeRangeBgImages}
               selectedInterval={[0, 100]}
               onUpdateCallback={(value) => {
                 setlimitMinTrimValue(value[0]);
@@ -191,19 +212,10 @@ function EditMedia() {
               maxTime={maxTime}
               handleMaxTime={(value) => setMaxTime(value)}
               step={100 / maxTime}
-            />
-          )}
-          {/* {currentTool === LABEL.TRIM && (
-            <TrimSliderControl
-              localVideoLink={localVideoLink}
-              outFormat={outFormat}
               limitMinTrimValue={limitMinTrimValue}
               limitMaxTrimValue={limitMaxTrimValue}
-              handleLimitMinTrimValue={(value) => setlimitMinTrimValue(value)}
-              handleLimitMaxTrimValue={(value) => setlimitMaxTrimValue(value)}
-              handleOutFormat={(value) => setOutFormat(value)}
             />
-          )} */}
+          )}
           {currentTool === LABEL.BGMUSIC && (
             <BgMusicOverControl
               overMusic={overMusic}

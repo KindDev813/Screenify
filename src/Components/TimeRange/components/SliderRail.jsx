@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const getRangeRailInnerStyle = ({ backgroundImages }) => {
+const getRangeRailInnerStyleOrg = ({ backgroundImages }) => {
   if (backgroundImages.length === 0) {
     return {};
   }
@@ -28,19 +28,66 @@ const getRangeRailInnerStyle = ({ backgroundImages }) => {
   return style;
 };
 
-export const SliderRail = ({ getRailProps, backgroundImages }) => (
-  <>
-    <div className="react_time_range__rail__outer" {...getRailProps()} />
-    <div
-      className="react_time_range__rail__inner"
-      style={getRangeRailInnerStyle({ backgroundImages })}
-    />
-  </>
-);
+const getRangeRailInnerStyleTop = ({
+  backgroundImages,
+  limitMinTrimValue,
+  limitMaxTrimValue,
+}) => {
+  if (backgroundImages.length === 0) {
+    return {};
+  }
 
-SliderRail.propTypes = {
-  getRailProps: PropTypes.func.isRequired,
-  backgroundImages: PropTypes.arrayOf(PropTypes.string),
+  const backgroundImage = backgroundImages
+    .map((value) => {
+      return `url("${value}")`;
+    })
+    .join(",");
+
+  const backgroundPosition = backgroundImages
+    .map((value, index) => {
+      return `calc(100% / ${backgroundImages.length - 1} * ${index}) 0%`;
+    })
+    .join(",");
+
+  const style = {
+    backgroundImage: backgroundImage,
+    backgroundPosition: backgroundPosition,
+    backgroundSize: `calc(100% / ${backgroundImages.length}) 100%`,
+    backgroundRepeat: "no-repeat",
+    clipPath: `inset(0px ${
+      100 - limitMaxTrimValue
+    }% 0px ${limitMinTrimValue}%)`,
+  };
+
+  return style;
+};
+
+export const SliderRail = ({
+  getRailProps,
+  backgroundImages,
+  limitMinTrimValue,
+  limitMaxTrimValue,
+}) => {
+  return (
+    <>
+      <div className="react_time_range__rail__outer" {...getRailProps()} />
+
+      <div className="react_time_range__rail__inner_container">
+        <div
+          className="react_time_range__rail__inner_org"
+          style={getRangeRailInnerStyleOrg({ backgroundImages })}
+        />
+        <div
+          className="react_time_range__rail__inner_top"
+          style={getRangeRailInnerStyleTop({
+            backgroundImages,
+            limitMinTrimValue,
+            limitMaxTrimValue,
+          })}
+        />
+      </div>
+    </>
+  );
 };
 
 export default SliderRail;
