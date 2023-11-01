@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Radio, Modal } from "antd";
+import { Button, Radio } from "antd";
 import {
   ChromeOutlined,
   DesktopOutlined,
@@ -16,15 +16,15 @@ import TimeCounterModal from "../../Components/TimeCounterModal";
 import LabelSelect from "../../Components/LabelSelect";
 import AnnotationTool from "../../Components/AnnotationTool";
 
-let mediaRecorder,
-  stream,
-  screenStream,
-  microphoneStream,
-  recordingStartTime,
+let mediaRecorder = null,
+  stream = null,
+  screenStream = null,
+  microphoneStream = null,
+  recordingStartTime = null,
   recordingEndTime = null;
 
-let cameraDeviceCounter = 0;
-let micDeviceCounter = 0;
+let cameraDeviceCounter = 0,
+  micDeviceCounter = 0;
 
 // Recording mode labels & icons
 const modeLabels = [
@@ -71,21 +71,15 @@ function Record() {
   // Get camera & audio device
   useEffect(() => {
     const getDeviceName = async () => {
-      let audioDevices = [],
-        videoDevices = [];
       await navigator.mediaDevices.enumerateDevices().then(async (devices) => {
         devices.forEach((device) => {
           if (device.kind === "videoinput") {
             cameraDeviceCounter++;
-            videoDevices.push(device);
           }
-
           if (device.kind === "audioinput") {
             micDeviceCounter++;
-            audioDevices.push(device);
           }
         });
-        await onGetDeviceSource(audioDevices, videoDevices);
       });
 
       if (cameraDeviceCounter !== 0 && micDeviceCounter !== 0) {
@@ -134,6 +128,7 @@ function Record() {
       navigator.permissions.query({ name: "camera" }).then((res) => {
         if (res.state == "granted") {
           setCameraAllowed(true);
+          onGetDeviceSource();
         } else {
           setCameraAllowed(false);
         }
@@ -144,6 +139,7 @@ function Record() {
       navigator.permissions.query({ name: "microphone" }).then((res) => {
         if (res.state == "granted") {
           setMicrophoneAllowed(true);
+          onGetDeviceSource();
         } else {
           setMicrophoneAllowed(false);
         }
@@ -194,7 +190,7 @@ function Record() {
       mediaRecorder.ondataavailable = (e) => {
         let temp = recordedChunks;
         temp.push(e.data);
-        setRecordedChunks(e.data);
+        setRecordedChunks(temp);
       };
 
       mediaRecorder.start();
@@ -350,7 +346,23 @@ function Record() {
   };
 
   // Getting camera & microphone source
-  const onGetDeviceSource = async (audioDevices, videoDevices) => {
+  const onGetDeviceSource = async () => {
+    let audioDevices = [],
+      videoDevices = [];
+    await navigator.mediaDevices.enumerateDevices().then(async (devices) => {
+      devices.forEach((device) => {
+        if (device.kind === "videoinput") {
+          cameraDeviceCounter++;
+          videoDevices.push(device);
+        }
+
+        if (device.kind === "audioinput") {
+          micDeviceCounter++;
+          audioDevices.push(device);
+        }
+      });
+    });
+
     if (!isEmpty(videoDevices)) {
       let temp = videoDevices.map((videoDevice) => {
         return { label: videoDevice.label, value: videoDevice.deviceId };
