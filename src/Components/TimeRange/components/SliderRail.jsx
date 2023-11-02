@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { isEmpty } from "../../../utils/functions";
 
 const getRangeRailInnerStyleOrg = ({ backgroundImages }) => {
   if (backgroundImages.length === 0) {
@@ -73,7 +74,7 @@ export const SliderRail = ({
       <div className="react_time_range__rail__outer" {...getRailProps()} />
 
       <div className="react_time_range__rail__inner_container">
-        {backgroundImages && (
+        {!isEmpty(backgroundImages) && (
           <>
             <div
               className="react_time_range__rail__inner_org"

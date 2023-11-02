@@ -13,6 +13,7 @@ const AnnotationPlayField = (props) => {
     currentSelectedOption,
     handleCurrentSelectedOption,
   } = props;
+
   const [readonly, setReadonly] = useState(false);
   const [canvas, setCanvas] = useState();
   const [canvasState, setCanvasState] = useState([]);
@@ -68,7 +69,7 @@ const AnnotationPlayField = (props) => {
   }, [currentSelectedOption, canvas]);
 
   const handleCanvasDrawEnd = () => {
-    handleCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.IS_SELETED);
+    // handleCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.IS_SELETED);
   };
 
   const updateCanvasState = (value) => {
