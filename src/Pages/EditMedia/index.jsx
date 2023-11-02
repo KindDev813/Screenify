@@ -18,15 +18,6 @@ import {
   alertModal,
 } from "../../utils/functions";
 
-import bg_output0 from "../../utils/screenshot/output0.jpg";
-import bg_output1 from "../../utils/screenshot/output1.jpg";
-import bg_output2 from "../../utils/screenshot/output2.jpg";
-import bg_output3 from "../../utils/screenshot/output3.jpg";
-import bg_output4 from "../../utils/screenshot/output4.jpg";
-import bg_output5 from "../../utils/screenshot/output5.jpg";
-import bg_output6 from "../../utils/screenshot/output6.jpg";
-import bg_output7 from "../../utils/screenshot/output7.jpg";
-
 const ffmpeg = createFFmpeg({ log: false });
 
 function EditMedia() {
@@ -40,16 +31,7 @@ function EditMedia() {
   const [cropDimensions, setCropDimensions] = useState();
   const [origDimensions, setOrigDimensions] = useState({});
   const [maxTime, setMaxTime] = useState([]);
-  const [timeRangeBgImages, setTimeRangeBgImages] = useState([
-    bg_output0,
-    bg_output1,
-    bg_output2,
-    bg_output3,
-    bg_output4,
-    bg_output5,
-    bg_output6,
-    bg_output7,
-  ]);
+  const [timeRangeBgImages, setTimeRangeBgImages] = useState([]);
 
   useEffect(() => {
     ffmpeg

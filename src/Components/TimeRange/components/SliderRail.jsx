@@ -73,18 +73,22 @@ export const SliderRail = ({
       <div className="react_time_range__rail__outer" {...getRailProps()} />
 
       <div className="react_time_range__rail__inner_container">
-        <div
-          className="react_time_range__rail__inner_org"
-          style={getRangeRailInnerStyleOrg({ backgroundImages })}
-        />
-        <div
-          className="react_time_range__rail__inner_top"
-          style={getRangeRailInnerStyleTop({
-            backgroundImages,
-            limitMinTrimValue,
-            limitMaxTrimValue,
-          })}
-        />
+        {backgroundImages && (
+          <>
+            <div
+              className="react_time_range__rail__inner_org"
+              style={getRangeRailInnerStyleOrg({ backgroundImages })}
+            />
+            <div
+              className="react_time_range__rail__inner_top"
+              style={getRangeRailInnerStyleTop({
+                backgroundImages,
+                limitMinTrimValue,
+                limitMaxTrimValue,
+              })}
+            />
+          </>
+        )}
       </div>
     </>
   );
