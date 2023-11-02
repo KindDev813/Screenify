@@ -148,6 +148,39 @@ export const getVideoDimensions = async (blobUrl) => {
   });
 };
 
+export const extractImagesFFmpeg = async (ffmpeg, link, maxTime, fileName) => {
+  let imageLinks = [];
+  try {
+    await ffmpeg.FS(
+      "writeFile",
+      `input_${fileName}.mp4`,
+      await fetchFile(link)
+    );
+    // ffmpeg -i BBB.mp4 -filter_complex "fps=1/79" ou_%03d.png
+    await ffmpeg.run(
+      "-i",
+      `input_${fileName}.mp4`,
+      "-filter_complex",
+      `fps=1/${Math.floor(maxTime / 8)}`,
+      "-preset",
+      "ultrafast",
+      `${fileName}_%01d.png`
+    );
+
+    for (let i = 0; i < 8; i++) {
+      let data = ffmpeg.FS("readFile", `${fileName}_${i + 1}.png`);
+      let downUrl = URL.createObjectURL(
+        new Blob([data.buffer], { type: "image/png" })
+      );
+      imageLinks.push(downUrl);
+    }
+
+    return imageLinks;
+  } catch (error) {
+    console.log("Something went wrong!", error);
+  }
+};
+
 export const alertModal = (value) => {
   Modal.error({
     title: value,

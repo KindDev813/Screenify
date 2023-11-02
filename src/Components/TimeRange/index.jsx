@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { scaleTime } from "d3-scale";
+import { Spin } from "antd";
 import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
 import { LOCAL_STORAGE } from "../../utils/constants";
 
@@ -9,9 +10,17 @@ import Tick from "./components/Tick";
 import Handle from "./components/Handle";
 
 import "./style.css";
+import { isEmpty } from "../../utils/functions";
 
 const TimeRange = (props) => {
-  const { localVideoLink, maxTime, handleMaxTime, onUpdateCallback } = props;
+  const {
+    localVideoLink,
+    maxTime,
+    handleMaxTime,
+    limitMinTrimValue,
+    limitMaxTrimValue,
+    onUpdateCallback,
+  } = props;
 
   useEffect(() => {
     if (localVideoLink) {
@@ -66,15 +75,23 @@ const TimeRange = (props) => {
           )}
         </Ticks>
 
-        <Rail>
-          {({ getRailProps }) => (
-            <SliderRail
-              className={props.sliderRailClassName}
-              getRailProps={getRailProps}
-              backgroundImages={props.backgroundImages}
-            />
-          )}
-        </Rail>
+        <Spin
+          spinning={isEmpty(props.backgroundImages) ? true : false}
+          size="large"
+          delay={500}
+        >
+          <Rail>
+            {({ getRailProps }) => (
+              <SliderRail
+                className={props.sliderRailClassName}
+                getRailProps={getRailProps}
+                backgroundImages={props.backgroundImages}
+                limitMinTrimValue={limitMinTrimValue}
+                limitMaxTrimValue={limitMaxTrimValue}
+              />
+            )}
+          </Rail>
+        </Spin>
 
         <Tracks left={false} right={false}>
           {({ tracks, getTrackProps }) => (

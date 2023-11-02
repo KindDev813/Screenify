@@ -13,18 +13,10 @@ import {
   trimVideoFFmpeg,
   cropVideoFFmpeg,
   musicOverFFmpeg,
+  extractImagesFFmpeg,
   getVideoDimensions,
   alertModal,
 } from "../../utils/functions";
-
-import bg_output0 from "../../utils/screenshot/output0.jpg";
-import bg_output1 from "../../utils/screenshot/output1.jpg";
-import bg_output2 from "../../utils/screenshot/output2.jpg";
-import bg_output3 from "../../utils/screenshot/output3.jpg";
-import bg_output4 from "../../utils/screenshot/output4.jpg";
-import bg_output5 from "../../utils/screenshot/output5.jpg";
-import bg_output6 from "../../utils/screenshot/output6.jpg";
-import bg_output7 from "../../utils/screenshot/output7.jpg";
 
 const ffmpeg = createFFmpeg({ log: false });
 
@@ -38,17 +30,8 @@ function EditMedia() {
   const [overMusic, setOverMusic] = useState(null);
   const [cropDimensions, setCropDimensions] = useState();
   const [origDimensions, setOrigDimensions] = useState({});
-  const [maxTime, setMaxTime] = useState();
-  const timeRangeBackgroundImages = [
-    bg_output0,
-    bg_output1,
-    bg_output2,
-    bg_output3,
-    bg_output4,
-    bg_output5,
-    bg_output6,
-    bg_output7,
-  ];
+  const [maxTime, setMaxTime] = useState([]);
+  const [timeRangeBgImages, setTimeRangeBgImages] = useState([]);
 
   useEffect(() => {
     ffmpeg
@@ -57,7 +40,7 @@ function EditMedia() {
         setLoadingVisible(false);
       })
       .catch((error) => {
-        alertModal("Please reload editting page!");
+        alertModal("Please reload the editting page!");
       });
 
     let links = JSON.parse(localStorage.getItem(LOCAL_STORAGE.BLOB_LINKS));
@@ -74,6 +57,24 @@ function EditMedia() {
           console.log(`Error occurred: ${error}`);
         });
     }
+  }, [localVideoLink]);
+
+  useEffect(() => {
+    const getImages = async () => {
+      if (localVideoLink && !loadingVisible) {
+        let fileName = new Date().getTime();
+        let imageLinks = await extractImagesFFmpeg(
+          ffmpeg,
+          localVideoLink,
+          maxTime,
+          fileName
+        );
+        setTimeRangeBgImages(imageLinks);
+        setLoadingVisible(false);
+      }
+    };
+
+    getImages();
   }, [localVideoLink, loadingVisible]);
 
   const onSaveAndDownload = async () => {
@@ -174,6 +175,8 @@ function EditMedia() {
           <VideoPlayer
             localVideoLink={localVideoLink}
             currentTool={currentTool}
+            limitMinTrimValue={(maxTime / 100) * limitMinTrimValue}
+            limitMaxTrimValue={(maxTime / 100) * limitMaxTrimValue}
             handleCropDimensionsData={(value) => setCropDimensions(value)}
           />
 
@@ -182,7 +185,7 @@ function EditMedia() {
               error={false}
               ticksNumber={20}
               localVideoLink={localVideoLink}
-              backgroundImages={timeRangeBackgroundImages}
+              backgroundImages={timeRangeBgImages}
               selectedInterval={[0, 100]}
               onUpdateCallback={(value) => {
                 setlimitMinTrimValue(value[0]);
@@ -191,19 +194,10 @@ function EditMedia() {
               maxTime={maxTime}
               handleMaxTime={(value) => setMaxTime(value)}
               step={100 / maxTime}
-            />
-          )}
-          {/* {currentTool === LABEL.TRIM && (
-            <TrimSliderControl
-              localVideoLink={localVideoLink}
-              outFormat={outFormat}
               limitMinTrimValue={limitMinTrimValue}
               limitMaxTrimValue={limitMaxTrimValue}
-              handleLimitMinTrimValue={(value) => setlimitMinTrimValue(value)}
-              handleLimitMaxTrimValue={(value) => setlimitMaxTrimValue(value)}
-              handleOutFormat={(value) => setOutFormat(value)}
             />
-          )} */}
+          )}
           {currentTool === LABEL.BGMUSIC && (
             <BgMusicOverControl
               overMusic={overMusic}
