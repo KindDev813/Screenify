@@ -133,7 +133,7 @@ const Paint = React.forwardRef(
         canvas.on("object:modified");
         canvas.on("object:added");
       };
-    }, [canvas, drawMode]);
+    }, [canvas, drawMode, penSize, penColor]);
 
     return (
       <canvas width={window.innerWidth} height={window.innerHeight} ref={ref} />

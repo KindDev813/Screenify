@@ -282,10 +282,21 @@ function Record() {
 
         let mergedMediaStream = new MediaStream();
         mergedMediaStream.addTrack(screenStream.getVideoTracks()[0]);
-        mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
+        if (
+          screenStream.getAudioTracks()[0] ||
+          microphoneSource !== "Disabled"
+        ) {
+          mergedMediaStream.addTrack(dest.stream.getAudioTracks()[0]);
+        }
 
         stream = mergedMediaStream;
-        setVisibleTimeCounterModal(true);
+        if (recordingMode == !2) {
+          setVisibleTimeCounterModal(true);
+        } else {
+          onCloseModalStartRecording();
+          setVisibleEditMenu(true);
+          setRecordingStarted(true);
+        }
       }
     } catch (error) {
       console.log("Error accessing the screen: ", error);
