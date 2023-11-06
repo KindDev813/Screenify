@@ -20,14 +20,13 @@ const Paint = React.forwardRef(
       drawMode,
       penColor,
       penSize,
+      textFontSize,
       onDrawEnd,
       readonly = false,
       handleUpdateCanvasState,
     },
     ref
   ) => {
-    // 1: TextEditor, 2: Rect, 3:Ellipse 4: FreeHand 5: Seleted
-
     useEffect(() => {
       if (!canvas) return;
 
@@ -58,7 +57,13 @@ const Paint = React.forwardRef(
 
         switch (drawMode) {
           case ANNOTATION_TOOL_SELECTION.TEXT_EDITOR:
-            text = createText(origX, origY, penSize * 6, penColor, readonly);
+            text = createText(
+              origX,
+              origY,
+              textFontSize * 6,
+              penColor,
+              readonly
+            );
             canvas.add(text);
             canvas.setActiveObject(text);
             break;
@@ -115,8 +120,11 @@ const Paint = React.forwardRef(
 
       const handleCanvasMouseUp = (event) => {
         drawing = false;
-        onDrawEnd();
+        if (drawMode !== ANNOTATION_TOOL_SELECTION.FREE_HAND) {
+          onDrawEnd();
+        }
 
+        handleUpdateCanvasState(canvas);
         canvas.renderAll();
       };
 
@@ -133,7 +141,7 @@ const Paint = React.forwardRef(
         canvas.on("object:modified");
         canvas.on("object:added");
       };
-    }, [canvas, drawMode, penSize, penColor]);
+    }, [canvas, drawMode, penSize, textFontSize, penColor]);
 
     return (
       <canvas width={window.innerWidth} height={window.innerHeight} ref={ref} />

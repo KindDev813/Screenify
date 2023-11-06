@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Spin, Button } from "antd";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
-import { useNavigate } from "react-router-dom";
 
 import { LOCAL_STORAGE, LABEL } from "../../utils/constants";
 import TrimSliderControl from "../../Components/TrimSliderControl";
@@ -21,7 +20,6 @@ import {
 const ffmpeg = createFFmpeg({ log: false });
 
 function EditMedia() {
-  const navigate = useNavigate();
   const [limitMinTrimValue, setlimitMinTrimValue] = useState(0);
   const [limitMaxTrimValue, setlimitMaxTrimValue] = useState(100);
   const [localVideoLink, setLocalVideoLink] = useState("");
@@ -92,6 +90,9 @@ function EditMedia() {
       case LABEL.BGMUSIC:
         downUrl = await musicOverModeDown(fileName);
         break;
+      default:
+        downUrl = localVideoLink;
+        break;
     }
 
     const a = document.createElement("a");
@@ -99,11 +100,6 @@ function EditMedia() {
     a.download = `${fileName}.mp4`;
     setLoadingVisible(false);
     a.click();
-  };
-
-  const onBack = () => {
-    URL.revokeObjectURL(localVideoLink);
-    navigate("/");
   };
 
   const trimModeDown = async (fileName) => {
@@ -150,17 +146,7 @@ function EditMedia() {
         />
 
         <div className="col-span-6 flex flex-col justify-evenly h-full my-auto p-4 border-2 border-[#00000057] rounded-lg">
-          <div className="flex justify-between p-4">
-            <Button
-              type="primary"
-              shape="round"
-              onClick={() => {
-                onBack();
-              }}
-            >
-              Back
-            </Button>
-
+          <div className="flex justify-end p-4">
             <Button
               type="primary"
               shape="round"

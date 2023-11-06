@@ -1,9 +1,7 @@
 import React from "react";
 
-export const CAMERA_ALLOWED = "You can use your device!";
-export const CAMERA_BLOCKED = "Please allow permission of your device!";
-export const MICROPHONE_ALLOWED = "You can use your microphone!";
-export const MICROPHONE_BLOCKED = "Please allow permission of your microphone!";
+export const DEVICE_ALLOWED = "You can use your device!";
+export const DEVICE_BLOCKED = "Please allow permission of your device!";
 
 export const LABEL = {
   FULL_SCREEN: "Full Screen",

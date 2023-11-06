@@ -33,6 +33,7 @@ const AnnotationTool = (props) => {
   ); // Now, this is the option you selected. 0: Delete, 1: TextEditor, 2: Rect, 3: Ellipse, 4: Triangle, 5: FreeHand 6: Seleted, 7:Undo
   const [nowColor, setNowColor] = useState("#ff0000"); // Setted color by Color Picker
   const [nowSize, setNowSize] = useState(10); // Setted size by pencil scroll
+  const [textFontSize, setTextFontSize] = useState(12);
   const [annotationToolsOpen, setAnnotationToolsOpen] = useState(false);
 
   const annotationBadge = {
@@ -49,6 +50,19 @@ const AnnotationTool = (props) => {
         defaultValue={nowSize}
         style={{ display: "inline-block", height: 100 }}
         onChange={(value) => setNowSize(value)}
+      />
+    </div>
+  );
+
+  const textEditorContent = (
+    <div>
+      <Slider
+        vertical
+        min={1}
+        max={50}
+        defaultValue={textFontSize}
+        style={{ display: "inline-block", height: 100 }}
+        onChange={(value) => setTextFontSize(value)}
       />
     </div>
   );
@@ -123,18 +137,25 @@ const AnnotationTool = (props) => {
                     }
                     onClick={() => {}}
                   ></FloatButton>
-                  <FloatButton
-                    icon={<MdTitle />}
-                    badge={
-                      currentSelectedOption ===
-                        ANNOTATION_TOOL_SELECTION.TEXT_EDITOR && annotationBadge
-                    }
-                    onClick={() =>
-                      setCurrentSelectedOption(
-                        ANNOTATION_TOOL_SELECTION.TEXT_EDITOR
-                      )
-                    }
-                  />
+                  <Popover
+                    placement="rightTop"
+                    trigger={"hover"}
+                    content={textEditorContent}
+                  >
+                    <FloatButton
+                      icon={<MdTitle />}
+                      badge={
+                        currentSelectedOption ===
+                          ANNOTATION_TOOL_SELECTION.TEXT_EDITOR &&
+                        annotationBadge
+                      }
+                      onClick={() =>
+                        setCurrentSelectedOption(
+                          ANNOTATION_TOOL_SELECTION.TEXT_EDITOR
+                        )
+                      }
+                    />
+                  </Popover>
                   <Popover
                     placement="rightTop"
                     trigger={"hover"}
@@ -172,11 +193,16 @@ const AnnotationTool = (props) => {
                         currentSelectedOption ===
                           ANNOTATION_TOOL_SELECTION.FREE_HAND && annotationBadge
                       }
-                      onClick={() =>
-                        setCurrentSelectedOption(
-                          ANNOTATION_TOOL_SELECTION.FREE_HAND
-                        )
-                      }
+                      onClick={() => {
+                        currentSelectedOption ===
+                        ANNOTATION_TOOL_SELECTION.FREE_HAND
+                          ? setCurrentSelectedOption(
+                              ANNOTATION_TOOL_SELECTION.IS_NOT_SELECTED
+                            )
+                          : setCurrentSelectedOption(
+                              ANNOTATION_TOOL_SELECTION.FREE_HAND
+                            );
+                      }}
                     />
                   </Popover>
                 </FloatButton.Group>
@@ -223,6 +249,7 @@ const AnnotationTool = (props) => {
           <AnnotationPlayField
             nowColor={nowColor}
             nowSize={nowSize}
+            textFontSize={textFontSize}
             currentSelectedOption={currentSelectedOption}
             handleCurrentSelectedOption={(value) => {
               setCurrentSelectedOption(value);

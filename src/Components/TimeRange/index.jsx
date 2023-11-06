@@ -36,7 +36,11 @@ const TimeRange = (props) => {
 
   // Handle onUpdate event
   const onUpdate = (newTime) => {
-    onUpdateCallback(newTime);
+    if (!isEmpty(newTime[0])) {
+      onUpdateCallback(newTime);
+    } else {
+      onUpdateCallback([0, 100]);
+    }
   };
 
   // Get date ticks

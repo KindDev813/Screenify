@@ -10,6 +10,7 @@ const AnnotationPlayField = (props) => {
   const {
     nowColor,
     nowSize,
+    textFontSize,
     currentSelectedOption,
     handleCurrentSelectedOption,
   } = props;
@@ -46,7 +47,6 @@ const AnnotationPlayField = (props) => {
 
   useEffect(() => {
     if (!canvas) return;
-
     canvas.selection =
       currentSelectedOption === ANNOTATION_TOOL_SELECTION.IS_SELETED; // Selected canvas
 
@@ -56,6 +56,7 @@ const AnnotationPlayField = (props) => {
 
     if (currentSelectedOption === ANNOTATION_TOOL_SELECTION.UNDO) {
       if (currentStateIndex <= 0) {
+        console.log("`2`");
         return;
       }
 
@@ -69,7 +70,7 @@ const AnnotationPlayField = (props) => {
   }, [currentSelectedOption, canvas]);
 
   const handleCanvasDrawEnd = () => {
-    // handleCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.IS_SELETED);
+    handleCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.IS_SELETED);
   };
 
   const updateCanvasState = (value) => {
@@ -95,6 +96,7 @@ const AnnotationPlayField = (props) => {
         drawMode={currentSelectedOption}
         penColor={nowColor}
         penSize={nowSize}
+        textFontSize={textFontSize}
         readonly={readonly}
         onDrawEnd={handleCanvasDrawEnd}
         handleUpdateCanvasState={(value) => updateCanvasState(value)}

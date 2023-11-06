@@ -1,5 +1,5 @@
 import React from "react";
-import { CAMERA_ALLOWED, CAMERA_BLOCKED } from "../utils/constants";
+import { DEVICE_ALLOWED, DEVICE_BLOCKED } from "../utils/constants";
 import { Select } from "antd";
 
 const LabelSelect = (props) => {
@@ -16,9 +16,9 @@ const LabelSelect = (props) => {
         disabled={!allowed}
       />
       {allowed ? (
-        <p className="mt-1 text-start text-[#31a15c]">{CAMERA_ALLOWED}</p>
+        <p className="mt-1 text-start text-[#31a15c]">{DEVICE_ALLOWED}</p>
       ) : (
-        <p className="mt-1 text-start text-[#fd4f4f]">{CAMERA_BLOCKED}</p>
+        <p className="mt-1 text-start text-[#fd4f4f]">{DEVICE_BLOCKED}</p>
       )}
     </>
   );

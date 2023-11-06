@@ -87,29 +87,40 @@ export const musicOverFFmpeg = async (ffmpeg, fileName, link, overMusic) => {
       `input_${fileName}.mp4`,
       await fetchFile(link)
     );
-    await ffmpeg.FS(
-      "writeFile",
-      `input_music_${fileName}.mp3`,
-      await fetchFile(overMusic)
-    );
 
-    await ffmpeg.run(
-      "-i",
-      `input_${fileName}.mp4`,
-      "-i",
-      `input_music_${fileName}.mp3`,
-      "-filter_complex",
-      "[0:a][1:a]amerge=inputs=2[a]",
-      "-map",
-      "[a]",
-      "-map",
-      "0:v",
-      "-shortest",
-      "-preset",
-      "ultrafast",
-      `output_${fileName}.mp4`
-    );
+    if (isEmpty(overMusic)) {
+      await ffmpeg.run(
+        "-i",
+        `input_${fileName}.mp4`,
+        "-shortest",
+        "-preset",
+        "ultrafast",
+        `output_${fileName}.mp4`
+      );
+    } else {
+      await ffmpeg.FS(
+        "writeFile",
+        `input_music_${fileName}.mp3`,
+        await fetchFile(overMusic)
+      );
 
+      await ffmpeg.run(
+        "-i",
+        `input_${fileName}.mp4`,
+        "-i",
+        `input_music_${fileName}.mp3`,
+        "-filter_complex",
+        "[0:a][1:a]amerge=inputs=2[a]",
+        "-map",
+        "[a]",
+        "-map",
+        "0:v",
+        "-shortest",
+        "-preset",
+        "ultrafast",
+        `output_${fileName}.mp4`
+      );
+    }
     const data = ffmpeg.FS("readFile", `output_${fileName}.mp4`);
     const downUrl = URL.createObjectURL(
       new Blob([data.buffer], { type: "video/mp4" })
@@ -188,7 +199,12 @@ export const alertModal = (value) => {
 };
 
 export const isEmpty = (obj) => {
-  if (obj === null || obj === undefined) return !obj;
+  if (
+    obj === null ||
+    obj === undefined ||
+    (typeof obj === "number" && obj === NaN)
+  )
+    return !obj;
   else if (typeof obj === "string" || Array.isArray(obj))
     return obj.length === 0;
   else if (typeof obj === "object") return Object.keys(obj).length === 0;

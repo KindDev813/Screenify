@@ -16,6 +16,15 @@ const VideoPlayer = (props) => {
   const [cropData, setCropData] = useState();
 
   useEffect(() => {
+    handleCropDimensionsData({
+      width: 1,
+      height: 1,
+      x: 0,
+      y: 0,
+    });
+  }, []);
+
+  useEffect(() => {
     if (!isEmpty(limitMaxTrimValue)) {
       let tag = document.getElementById("blob_video");
       tag.currentTime = limitMaxTrimValue;
