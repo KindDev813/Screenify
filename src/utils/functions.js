@@ -87,15 +87,11 @@ export const musicOverFFmpeg = async (ffmpeg, fileName, link, overMusic) => {
       `input_${fileName}.mp4`,
       await fetchFile(link)
     );
-
-    if (isEmpty(overMusic)) {
-      await ffmpeg.run(
-        "-i",
-        `input_${fileName}.mp4`,
-        "-shortest",
-        "-preset",
-        "ultrafast",
-        `output_${fileName}.mp4`
+    if (overMusic.length == 1) {
+      await ffmpeg.FS(
+        "writeFile",
+        `output_${fileName}.mp4`,
+        await fetchFile(link)
       );
     } else {
       await ffmpeg.FS(
@@ -118,6 +114,10 @@ export const musicOverFFmpeg = async (ffmpeg, fileName, link, overMusic) => {
         "-shortest",
         "-preset",
         "ultrafast",
+        "-r",
+        "24",
+        "-f",
+        "mp4",
         `output_${fileName}.mp4`
       );
     }
@@ -199,12 +199,8 @@ export const alertModal = (value) => {
 };
 
 export const isEmpty = (obj) => {
-  if (
-    obj === null ||
-    obj === undefined ||
-    (typeof obj === "number" && obj === NaN)
-  )
-    return !obj;
+  if (obj === null || obj === undefined) return !obj;
+  else if (typeof obj === "number") return isNaN(obj);
   else if (typeof obj === "string" || Array.isArray(obj))
     return obj.length === 0;
   else if (typeof obj === "object") return Object.keys(obj).length === 0;

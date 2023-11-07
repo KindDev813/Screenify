@@ -27,14 +27,14 @@ const VideoPlayer = (props) => {
   useEffect(() => {
     if (!isEmpty(limitMaxTrimValue)) {
       let tag = document.getElementById("blob_video");
-      tag.currentTime = limitMaxTrimValue;
+      tag && (tag.currentTime = limitMaxTrimValue);
     }
   }, [limitMaxTrimValue]);
 
   useEffect(() => {
     if (!isEmpty(limitMinTrimValue)) {
       let tag = document.getElementById("blob_video");
-      tag.currentTime = limitMinTrimValue;
+      tag && (tag.currentTime = limitMinTrimValue);
     }
   }, [limitMinTrimValue]);
 
