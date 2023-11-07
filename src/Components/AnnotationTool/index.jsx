@@ -119,12 +119,12 @@ const AnnotationTool = (props) => {
                       setCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.DELETE)
                     }
                   />
-                  <FloatButton
+                  {/* <FloatButton
                     icon={<MdReply />}
                     onClick={() =>
                       setCurrentSelectedOption(ANNOTATION_TOOL_SELECTION.UNDO)
                     }
-                  />
+                  /> */}
                   <FloatButton
                     className="color_picker"
                     icon={
